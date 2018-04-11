@@ -1,0 +1,244 @@
+<dom-module id="single-select">
+    <template>
+      <style>
+      .session-status {
+          color: white;
+          font-size: 12px;
+          font-weight: 700;
+          padding: 2px 3px 1px;
+          text-align: center;
+          width: 100px;
+          -moz-border-radius: .4em;
+          -webkit-border-radius: .4em;
+          border-radius: .4em;
+          overflow: hidden;
+      }
+      .editable-field.select {
+        display: block;
+        min-height: unset;
+      }
+
+      .editable-field {
+        box-sizing: border-box;
+        border-radius: 2.01px;
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+        display: inline-block;
+        max-width: 100%;
+        padding: 2px 5px 2px 5px;
+        position: relative;
+        transition: box-shadow 150ms ease-in 0ms;
+        vertical-align: top;
+        min-height: 26px;
+        min-width: 80px;
+      }
+
+      .editable-field:hover {
+        background-color: #FFFFFF;
+        box-shadow: 0 0 0 1px #CCCCCC;
+      }
+
+      .editable-field .overlay-icon {
+        box-sizing: border-box;
+        background-color: #F0F0F0;
+        background-position: 4px 4px;
+        background-repeat: no-repeat;
+        border-left: 1px solid #CCCCCC;
+        bottom: 0;
+        height: auto;
+        margin: 0;
+        opacity: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 24px;
+        z-index: -1;
+      }
+
+      .editable-field:hover .overlay-icon {
+        transition: opacity 150ms ease-in 0ms;
+        opacity: 1;
+        z-index: auto;
+      }
+
+      .editable-cell-container .cell-editMode {
+        position: relative;
+      }
+
+      .editable-cell-container .noInlineEdit .cell-editMode {
+        padding: 0px;
+      }
+
+      .update-cancel-buttons{
+        background-color: #F0F0F0;
+        border-color: -moz-use-text-color #CCCCCC #CCCCCC;
+        border-image: none;
+        border-radius: 0 0 3px 3px;
+        border-width: medium 1px 1px;
+        box-shadow: 0 3px 6px rgba(111, 111, 111, 0.2);
+        outline: medium none;
+        padding: 3px;
+        position: absolute;
+        right: 31px;
+        z-index: 1;
+      }
+
+      .update-cancel-buttons button {
+        width: 20px;
+        height: 20px;
+        padding: 0;
+      }
+
+      .update-cancel-buttons button i {
+        font-size: 12px;
+        vertical-align: text-top;
+      }
+
+      input {
+        width : 100px;
+      }
+
+      input[type=checkbox], input[type=radio] {
+        width: 20px;
+      }
+
+      </style>
+
+      <div class="cell-wrapper" data-columnid="status">
+        <div class="editable-cell-container">
+          <div class="cell-readMode">
+            <div class="editable-field select" on-click="_changeMode">
+              <div class="" id="sessionStatus">
+                <template is="dom-if" if={{readMode}}>
+                      <span>{{value}}</span>
+                </template>
+              </div>
+            </div>
+          </div>
+          <div id="editMode" tabindex="1" on-blur='_checkblur'>
+            <template is="dom-if" if={{editMode}}>
+              <div class="cell-editMode">
+                <select name={{rowid}} on-change="_handleChange">
+                  <template is="dom-repeat" items={{cloneOptions}}>
+                    <option value={{item.value}} selected={{item.selected}}>{{item.content}}</option>
+                  </template>
+                </select>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </template>
+<script>
+  class SingleSelect extends Polymer.Element {
+    static get is() { return "single-select"; }
+    constructor() {
+      super();
+      this.readMode = true;
+      this.editMode = false;
+      this.value = '';
+      this.cloneOptions = [];
+      this.selectedValue = '';
+    }
+    static get properties() {
+      return {
+        options : {
+          type : Array,
+          value: [],
+          observer : '_optionsChanged'
+        },
+        rowid : {
+          type : String,
+          value : ''
+        },
+        cellkey : {
+          type : String,
+          value : ''
+        },
+        mode : {
+          type : String,
+          value : 'read',
+          observer : '_modeChange'
+        },
+      }
+    };
+
+    _optionsChanged(newValue) {
+      this.cloneOptions = JSON.parse(JSON.stringify(newValue));
+      this._assignValues(newValue);
+      this.addEventListener('submitValue', this._submitValue);
+
+    }
+
+    _assignValues(value) {
+      value.map(option => {
+        if(option.selected) {
+          this.value = option.content;
+          this.selectedValue = option.value;
+          if(option.color) {
+            $(this.$.sessionStatus).addClass('session-status');
+            $(this.$.sessionStatus).css('background', option.color);
+          }
+        }
+      })
+    }
+
+    _modeChange(newValue) {
+      if(this.mode === 'read') {
+        this.readMode = true;
+        this.editMode = false;
+      } else {
+        this.readMode = false;
+        this.editMode = true;
+      }
+    }
+
+    _changeMode() {
+      $(this.$.sessionStatus).removeClass('session-status');
+      this.readMode = false;
+      this.editMode = true;
+      this.$.editMode.focus();
+    }
+
+    _handleChange(e){
+      this.cloneOptions.map(option => {
+        if(option.value.toString() === e.target.value) {
+            option.selected = true;
+            this.selectedValue = e.target.value;
+        } else {
+            option.selected = false;
+        }
+      });
+    }
+
+    // _updateValues(e) {
+    //   this.readMode = true;
+    //   this.editMode = false;
+    //   this.options = JSON.parse(JSON.stringify(this.cloneOptions));
+    //   this.dispatchEvent(new CustomEvent('submitValue',{detail : {submit : true},bubbles: true, composed: true}));
+    // }
+    //
+    // _cancelValues(e) {
+    //   this.readMode = true;
+    //   this.editMode = false;
+    //   this._assignValues(this.options);
+    //   this.cloneOptions = JSON.parse(JSON.stringify(this.options));
+    //   this.dispatchEvent(new CustomEvent('submitValue',{detail : {submit : false},bubbles: true, composed: true}));
+    // }
+    _checkblur(ev) {
+      ev.stopPropagation();
+      if(ev.relatedTarget && ev.relatedTarget.localName === 'select') {
+        this.$.editMode.focus();
+      } else {
+        if(this.mode === 'read') {
+          this.readMode = true;
+          this.editMode = false;
+        }
+        this.options = JSON.parse(JSON.stringify(this.cloneOptions));
+        this.dispatchEvent(new CustomEvent('submitvalue',{detail : {type: 'SINGLE_SELECT' , value :this.selectedValue}, bubbles: true, composed: true}));
+      }
+    }
+  }
+  customElements.define(SingleSelect.is, SingleSelect);
+</script>
+
+</dom-module>

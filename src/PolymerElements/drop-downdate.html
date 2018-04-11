@@ -1,0 +1,233 @@
+<dom-module id="drop-downdate">
+  <template>
+    <custom-style>
+      <style>
+        .drop-downdate .dropDown-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+          min-width: 1px;
+        }
+  
+        .drop-downdate.isStandAlone .dropDown-wrapper.select-status span:nth-child(1),
+        .drop-downdate .dropDown-wrapper.select-status span:nth-child(1) {
+          color: #FFF;
+          border: 0;
+        }
+  
+        .drop-downdate .dropDown-wrapper span:nth-child(1) {
+          display: flex;
+          align-items: center;
+          height: 20px;
+          margin-right: 2px;
+          padding-right: 10px;
+          justify-content: center;
+          text-align: center;
+          flex-grow: 1;
+          color: #333;
+          background-color: #F7F8F9;
+          font-size: 12px;
+          overflow: hidden;
+          border-radius: 4px 0 0 4px;
+          border: 1px solid #DEE1E6;
+          box-sizing: border-box;
+        }
+  
+        .drop-downdate .dropDown-wrapper>span:nth-child(1)>div {
+          text-overflow: ellipsis;
+          overflow: hidden;
+          white-space: nowrap;
+          width: 100%;
+        }
+  
+        .drop-downdate .dropDown-wrapper>span:nth-child(1)>div:empty:after {
+          content: 'Choose Value...';
+        }
+  
+        .drop-downdate .dropDown-wrapper .trigger-dropDown {
+          min-width: 20px;
+          height: 20px;
+          vertical-align: baseline;
+          background-color: #deebff;
+          display: inline-block;
+          cursor: pointer;
+          border-radius: 0 3px 3px 0;
+          outline: none;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+  
+        .drop-downdate .dropDown-wrapper .trigger-dropDown:hover {
+          background: #B2D4FF;
+        }
+  
+        .drop-downdate .dropDown-container {
+          position: absolute;
+          z-index: 300;
+          top: 21px;
+          left: 0;
+          background-color: #fff;
+          border: 1px solid #dfe1e6;
+          border-bottom-left-radius: 3px;
+          border-bottom-right-radius: 3px;
+          box-shadow: 0 3px 6px rgba(0, 0, 0, .2);
+          width: calc(100% - 25px);
+        }
+  
+        .drop-downdate .dropDown-container ul {
+          list-style: none;
+          margin: 2px 0;
+          padding-left: 0;
+          max-height: 100px;
+          overflow: auto;
+        }
+  
+        .drop-downdate .dropDown-container ul li {
+          width: 100%;
+          padding: 3px 10px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-size: 12px;
+          box-sizing: border-box;
+        }
+  
+        .drop-downdate .dropDown-container ul li:hover {
+          background-color: #ebecf0;
+        }
+  
+        .drop-downdate.cell-wrapper.drop-Down {
+          width: 125px;
+        }
+  
+        .drop-downdate.cell-wrapper.drop-Down.isStandAlone {
+          width: auto;
+          min-width: 125px;
+        }
+  
+        .drop-downdate.isStandAlone .dropDown-wrapper>span:nth-child(1) {
+          height: 30px;
+          color: #333;
+          padding-right: 15px;
+        }
+  
+        .drop-downdate.isStandAlone .dropDown-wrapper .trigger-dropDown {
+          min-width: 30px;
+          height: 30px;
+        }
+  
+        .drop-downdate.isStandAlone .dropDown-container {
+          width: 100%;
+          top: 30px;
+        }
+  
+        .drop-downdate .dropDown-container.open {
+          display: block;
+        }
+  
+        .drop-downdate.isGrid .dropDown-container.open {
+          width: 120px;
+        }
+  
+        .drop-downdate.isGrid .dropDown-container {
+          position: fixed;
+          /* visibility: visible; */
+          /* display: block; */
+        }
+  
+        .drop-downdate .dropDown-container.close {
+          /* visibility: hidden; */
+          display: none;
+        }
+  
+        .drop-downdate.isStandAlone .remove-data {
+          right: 40px;
+          font-weight: bold;
+        }
+  
+        .drop-downdate .remove-data {
+          position: absolute;
+          right: 26px;
+          font-weight: 500;
+          cursor: pointer;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+      </style>
+    </custom-style>
+    <div class$="cell-wrapper drop-Down drop-downdate {{_checkIsGrid(isgrid)}}" data-columnid="status">
+      <div class="dropDown-wrapper">
+        <span id="dropDown" title="{{value}}">
+          <div>{{value}}</div>
+        </span>
+        <template is="dom-if" if="{{value}}">
+          <span class="remove-data" on-click="_emptyData">x</span>
+        </template>
+        <span class="trigger-dropDown" on-click="_triggerDropDown" tabindex="-1" on-focusout="_checkblur">
+          <template is="dom-if" if="{{imgurl}}">
+            <!-- <img src="{{imgurl}}"> -->
+          </template>
+        </span>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    class DropDownDate extends Polymer.Element {
+      static get is() { return "drop-downdate"; }
+      constructor() {
+        super();
+        this.value = '';
+        this.cloneOptions = [];
+        this.trigger;
+      }
+
+      static get properties() {
+        return {
+          options: {
+            type: Array,
+            value: [],
+            observer: '_optionsChanged'
+          },
+          rowid: {
+            type: String,
+            value: ''
+          },
+          cellkey: {
+            type: String,
+            value: ''
+          },
+          isgrid: {
+            type: Boolean,
+            value: false
+          },
+          imgurl: {
+            type: String,
+            value: ''
+          }
+        }
+      };
+
+      _optionsChanged(newValue) {
+        this.value = newValue[0].value;
+      }
+
+      _checkIsGrid(bool) {
+        return bool ? "isGrid" : "isStandAlone";
+      }
+
+      _emptyData(ev) {
+        this.value = '';
+        this.dispatchEvent(new CustomEvent('triggerdatechooser', { detail: { 'onlyUpdateValue': true, 'event': ev, 'value': this.value }, bubbles: true, composed: true }));
+      }
+
+      _triggerDropDown(ev) {
+        this.dispatchEvent(new CustomEvent('triggerdatechooser', { detail: { 'onlyUpdateValue': false, 'event': ev, 'value': this.value }, bubbles: true, composed: true }));
+      }
+
+    }
+    customElements.define(DropDownDate.is, DropDownDate);
+  </script>
+</dom-module>

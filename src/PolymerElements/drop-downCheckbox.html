@@ -1,0 +1,332 @@
+<dom-module id="drop-downcheckbox">
+    <template>
+      <custom-style>
+        <style>
+          .drop-downcheckbox .dropDown-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-width: 1px;
+          }
+    
+          .drop-downcheckbox.isStandAlone .dropDown-wrapper.select-status span:nth-child(1),
+          .drop-downcheckbox .dropDown-wrapper.select-status span:nth-child(1) {
+            color: #FFF;
+            border: 0;
+          }
+    
+          .drop-downcheckbox .dropDown-wrapper span:nth-child(1) {
+            display: flex;
+            align-items: center;
+            height: 20px;
+            margin-right: 2px;
+            padding-right: 10px;
+            justify-content: center;
+            text-align: center;
+            flex-grow: 1;
+            color: #333;
+            background-color: #F7F8F9;
+            font-size: 12px;
+            overflow: hidden;
+            border-radius: 4px 0 0 4px;
+            border: 1px solid #DEE1E6;
+            box-sizing: border-box;
+          }
+    
+          .drop-downcheckbox .dropDown-wrapper>span:nth-child(1)>div {
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            width: 100%;
+          }
+    
+          .drop-downcheckbox .dropDown-wrapper>span:nth-child(1)>div:empty:after {
+            content: 'Choose Value...';
+          }
+    
+          .drop-downcheckbox .dropDown-wrapper .trigger-dropDown {
+            min-width: 20px;
+            height: 20px;
+            vertical-align: baseline;
+            background-color: #deebff;
+            display: inline-block;
+            cursor: pointer;
+            border-radius: 0 3px 3px 0;
+            outline: none;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+    
+          .drop-downcheckbox .dropDown-wrapper .trigger-dropDown:hover {
+            background: #B2D4FF;
+          }
+    
+          .drop-downcheckbox .dropDown-container {
+            position: absolute;
+            z-index: 300;
+            top: 21px;
+            left: 0;
+            background-color: #fff;
+            border: 1px solid #dfe1e6;
+            border-bottom-left-radius: 3px;
+            border-bottom-right-radius: 3px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, .2);
+            width: calc(100% - 25px);
+          }
+    
+          .drop-downcheckbox .dropDown-container ul {
+            list-style: none;
+            margin: 2px 0;
+            padding-left: 0;
+            max-height: 100px;
+            overflow: auto;
+          }
+    
+          .drop-downcheckbox .dropDown-container ul li {
+            width: 100%;
+            padding: 3px 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+            box-sizing: border-box;
+          }
+    
+          .drop-downcheckbox .dropDown-container ul li:hover {
+            background-color: #ebecf0;
+          }
+    
+          .drop-downcheckbox.cell-wrapper.drop-Down {
+            width: 125px;
+          }
+    
+          .drop-downcheckbox.cell-wrapper.drop-Down.isStandAlone {
+            width: auto;
+            min-width: 125px;
+          }
+    
+          .drop-downcheckbox.isStandAlone .dropDown-wrapper>span:nth-child(1) {
+            height: 30px;
+            color: #333;
+            padding-right: 15px;
+          }
+    
+          .drop-downcheckbox.isStandAlone .dropDown-wrapper .trigger-dropDown {
+            min-width: 30px;
+            height: 30px;
+          }
+    
+          .drop-downcheckbox.isStandAlone .dropDown-container {
+            width: 100%;
+            top: 30px;
+          }
+    
+          .drop-downcheckbox .dropDown-container.open {
+            display: block;
+          }
+    
+          .drop-downcheckbox.isGrid .dropDown-container.open {
+            width: 120px;
+          }
+    
+          .drop-downcheckbox.isGrid .dropDown-container {
+            position: fixed;
+            /* display: block; */
+            /* visibility: visible; */
+          }
+    
+          .drop-downcheckbox .dropDown-container.close {
+            /* visibility: hidden; */
+            display: none;
+          }
+    
+          .drop-downcheckbox.isStandAlone .remove-data {
+            right: 40px;
+            font-weight: bold;
+          }
+    
+          .drop-downcheckbox .remove-data {
+            position: absolute;
+            right: 26px;
+            font-weight: 500;
+            cursor: pointer;
+            top: 50%;
+            transform: translateY(-50%);
+          }
+        </style>
+      </custom-style>
+      <div class$="cell-wrapper drop-Down  drop-downcheckbox {{_checkIsGrid(isgrid)}}" data-columnid="status">
+        <div class="dropDown-wrapper">
+          <span id="dropDown" title="{{value}}">
+            <div>{{value}}</div>
+          </span>
+          <template is="dom-if" if="{{value}}">
+            <span class="remove-data" on-click="_emptyData">x</span>
+          </template>
+          <span class="trigger-dropDown" on-click="_triggerDropDown" tabindex="-1" on-focusout="_checkblur">
+            <template is="dom-if" if="{{imgurl}}">
+              <!-- <img src="{{imgurl}}"> -->
+            </template>
+          </span>
+          <div tabindex="-1" class$="content dropDown-container {{_dropDownOpen(openDropDown)}}">
+            <ul>
+              <template is="dom-repeat" items="{{cloneOptions}}" index-as="indexRow">
+                <li data-value="{{item.value}}">
+                  <input type="checkbox" content="{{item.content}}" id="check-{{cellkey}}-{{rowid}}-{{indexRow}}" value="{{item.value}}" checked="{{item.selected}}"
+                    on-change="_handleChange">
+                  <label for$="check-{{cellkey}}-{{rowid}}-{{indexRow}}" class="content" tabindex="-1" title={{item.content}}>{{item.content}}</label>
+                </li>
+              </template>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </template>
+    <script>
+
+      class DropDownCheckbox extends Polymer.Element {
+        static get is() { return "drop-downcheckbox"; }
+        constructor() {
+          super();
+          this.openDropDown = false;
+          this.value = '';
+          this.cloneOptions = [];
+          this.trigger;
+          this.oldValue = '';
+        }
+
+        static get properties() {
+          return {
+            options : {
+              type : Array,
+              value: [],
+              observer : '_optionsChanged'
+            },
+            rowid : {
+              type : String,
+              value : ''
+            },
+            cellkey : {
+              type : String,
+              value : ''
+            },
+            isgrid : {
+              type: Boolean,
+              value: false,
+            },
+            imgurl : {
+              type : String,
+              value : ''
+            }
+          }
+        };
+
+        _optionsChanged(newValue) {
+          if(typeof newValue === 'string') {
+            newValue = JSON.parse(newValue);
+          }
+          this.cloneOptions = JSON.parse(JSON.stringify(newValue));
+          this._assignValues(newValue);
+        }
+
+        _checkIsGrid(bool) {
+          return bool ? "isGrid" : "isStandAlone";
+        }
+
+        _dropDownOpen(bool) {
+            return bool ? "open" : "close";
+        }
+
+        _assignValues(value) {
+          var that = this;
+          this.selectedCheckboxValues = [];
+          this.selectedCheckboxContent = [];
+          value.map(option => {
+            if(option.selected) {
+              that.selectedCheckboxValues.push(option.value);
+              that.selectedCheckboxContent.push(option.content);
+            }
+          })
+          this.value = this.selectedCheckboxContent.toString();
+          this.oldValue = this.selectedCheckboxContent.sort().toString();
+        }
+
+        _triggerDropDown(ev) {
+          this.openDropDown = !this.openDropDown;
+          this.trigger = ev.currentTarget;
+          if(this.isgrid) {
+            var triggerElement = ev.currentTarget.getBoundingClientRect();
+            var viewportHeight = window.innerHeight;
+            var height = this.shadowRoot.querySelector('.dropDown-container').clientHeight;
+            var topHeight = triggerElement.top + triggerElement.height + 2;
+            var parentWidth = $(ev.currentTarget).parents('.cell-wrapper')[0].clientWidth;
+            if(viewportHeight > (topHeight + height))
+              $(this.shadowRoot.querySelector('.dropDown-container')).css({'top':topHeight,'left':triggerElement.left - parentWidth + triggerElement.width , 'width':parentWidth})
+            else {
+              $(this.shadowRoot.querySelector('.dropDown-container')).css({ 'top': topHeight - triggerElement.height - height - 8, 'left':triggerElement.left - parentWidth + triggerElement.width , 'width':parentWidth})
+            }
+          }
+        }
+
+        _handleChange(e) {
+          var that = this;
+          this.selectedValue = e.target.dataValue;
+          let index = this.selectedCheckboxValues.indexOf(e.target.value);
+          if(e.target.checked) {
+            this.selectedCheckboxValues.push(e.target.value);
+            this.selectedCheckboxContent.push(e.target.content);
+            this.value = this.selectedCheckboxContent.toString();
+          } else {
+            if(index >= 0) {
+              this.selectedCheckboxValues.splice(index,1);
+              this.selectedCheckboxContent.splice(index,1);
+              this.value = this.selectedCheckboxContent.toString();
+            }
+          }
+          this.cloneOptions.map(function (option, index) {
+            var path = 'cloneOptions.' + index.toString();
+            if (option.value === e.target.value) {
+              if (e.target.checked) {
+                that.set(path, { content: option.content, value: option.value, selected: true });
+              } else {
+                that.set(path, { content: option.content, value: option.value, selected: false });
+              }
+            }
+          });
+          if(this.change) {
+            this.dispatchEvent(new CustomEvent('submitvalue', { detail: { oldValue: this.oldValue, rowId: this.rowid, type: 'CHECKBOX', value: this.selectedCheckboxValues, contentValue: this.selectedCheckboxContent }, bubbles: true, composed: true }));
+          }
+          this.trigger.focus();
+        }
+        
+        _emptyData(ev) {
+          var that = this;
+          this.openDropDown = false;
+          this.value = '';
+          this.selectedCheckboxValues = [];
+          this.selectedCheckboxContent = [];
+          this.cloneOptions.map(function (option, index) {
+            var path = 'cloneOptions.' + index.toString();
+            that.set(path, { content: option.content, value: option.value, selected: false });
+          });
+          this.dispatchEvent(new CustomEvent('submitvalue', { detail: { oldValue: this.oldValue, type: 'CHECKBOX', value: this.selectedCheckboxValues, contentValue: this.selectedCheckboxContent }, bubbles: true, composed: true }));
+
+        }
+
+        _checkblur(ev) {
+          if (ev.relatedTarget && (ev.relatedTarget.localName === 'input' || ev.relatedTarget.className.indexOf('content') >= 0) && !(ev.relatedTarget.type == 'submit')) {
+            this.trigger.focus();
+            this.openDropDown = true;
+          } else {
+            this.openDropDown = false;
+            if (this.oldValue !== this.selectedCheckboxContent.sort().toString())
+              this.dispatchEvent(new CustomEvent('submitvalue', { detail: { oldValue: this.oldValue, type: 'CHECKBOX', value: this.selectedCheckboxValues, contentValue: this.selectedCheckboxContent }, bubbles: true, composed: true }));
+          }
+        }
+      }
+      customElements.define(DropDownCheckbox.is, DropDownCheckbox);
+    </script>
+
+</dom-module>

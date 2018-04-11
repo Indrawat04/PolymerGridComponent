@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>polymergridcomponent-app test</title>
+
+    <script src="../../../webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="../../../web-component-tester/browser.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+
+    <link rel="import" href="../../src/polymergridcomponent-app/polymergridcomponent-app.html">
+  </head>
+  <body>
+
+    <test-fixture id="BasicTestFixture">
+      <template>
+        <polymergridcomponent-app></polymergridcomponent-app>
+      </template>
+    </test-fixture>
+
+    <test-fixture id="ChangedPropertyTestFixture">
+      <template>
+        <polymergridcomponent-app prop1="new-prop1"></polymergridcomponent-app>
+      </template>
+    </test-fixture>
+
+    <script>
+      suite('polymergridcomponent-app', function() {
+
+        test('instantiating the element with default properties works', function() {
+          var element = fixture('BasicTestFixture');
+          assert.equal(element.prop1, 'polymergridcomponent-app');
+          var elementShadowRoot = element.shadowRoot;
+          var elementHeader = elementShadowRoot.querySelector('h2');
+          assert.equal(elementHeader.innerHTML, 'Hello polymergridcomponent-app!');
+        });
+
+        test('setting a property on the element works', function() {
+          // Create a test fixture
+          var element = fixture('ChangedPropertyTestFixture');
+          assert.equal(element.prop1, 'new-prop1');
+          var elementShadowRoot = element.shadowRoot;
+          var elementHeader = elementShadowRoot.querySelector('h2');
+          assert.equal(elementHeader.innerHTML, 'Hello new-prop1!');
+        });
+
+      });
+    </script>
+
+
+  </body>
+</html>

@@ -1,0 +1,751 @@
+<dom-module id="custom-textarea">
+  <template>
+    <custom-style>
+      <style>
+        .custom-textarea textarea {
+          width: 200px;
+          min-height: 45px;
+          border: 1px solid #ccc;
+          border-radius: 3.01px;
+          box-sizing: border-box;
+          font-size: inherit;
+          margin: 0;
+          max-width: 200px;
+          vertical-align: baseline;
+          resize: none;
+        }
+  
+        .custom-textarea .wikiIcons-wrapper {
+          display: flex;
+          padding-top: 10px;
+        }
+  
+        .custom-textarea .wiki-icons {
+          width: 15px;
+          height: 15px;
+          border-radius: 3px;
+          /* display: inline-block; */
+          background-color: #deebff;
+          display: flex;
+          justify-content: center;
+          margin-right: 5px;
+        }
+  
+        .custom-textarea .editable-field.empty {
+          box-shadow: 0 0 0 1px #CCCCCC;
+        }
+  
+        .custom-textarea .editable-field {
+          box-sizing: border-box;
+          border-radius: 2.01px;
+          box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+          display: inline-block;
+          max-width: 100%;
+          padding: 2px 5px 2px 5px;
+          position: relative;
+          transition: box-shadow 150ms ease-in 0ms;
+          vertical-align: top;
+          min-height: 26px;
+          min-width: 200px;
+          max-width: 200px;
+          overflow: auto;
+          width: 100%;
+        }
+  
+        .custom-textarea .editable-field img {
+          max-width: 100%;
+        }
+  
+        .custom-textarea .editable-field:hover {
+          background-color: #FFFFFF;
+          box-shadow: 0 0 0 1px #CCCCCC;
+        }
+  
+        .custom-textarea .editable-field .overlay-icon {
+          box-sizing: border-box;
+          background-color: #F0F0F0;
+          background-position: 4px 4px;
+          background-repeat: no-repeat;
+          border-left: 1px solid #CCCCCC;
+          bottom: 0;
+          height: auto;
+          margin: 0;
+          opacity: 0;
+          position: absolute;
+          right: 0;
+          top: 0;
+          width: 24px;
+          z-index: -1;
+        }
+  
+        .custom-textarea .editable-field:hover .overlay-icon {
+          transition: opacity 150ms ease-in 0ms;
+          opacity: 1;
+          z-index: auto;
+        }
+  
+        .custom-textarea .overlay-icon .icon-pencil {
+          padding: 5px;
+          vertical-align: sub;
+        }
+  
+        .custom-textarea .editable-cell-container .cell-editMode {
+          position: relative;
+          min-height: 60px;
+        }
+  
+        .custom-textarea .editable-cell-container #editMode {
+          outline: none;
+        }
+  
+        .custom-textarea .editable-cell-container .noInlineEdit .cell-editMode {
+          padding: 0px;
+        }
+  
+        .custom-textarea .update-cancel-buttons {
+          background-color: #F0F0F0;
+          border-color: -moz-use-text-color #CCCCCC #CCCCCC;
+          border-image: none;
+          border-radius: 0 0 3px 3px;
+          border-width: medium 1px 1px;
+          box-shadow: 0 3px 6px rgba(111, 111, 111, 0.2);
+          outline: medium none;
+          padding: 3px;
+          position: absolute;
+          right: 31px;
+          z-index: 1;
+        }
+  
+        .custom-textarea .update-cancel-buttons button {
+          width: 20px;
+          height: 20px;
+          padding: 0;
+        }
+  
+        .custom-textarea .update-cancel-buttons button i {
+          font-size: 12px;
+          vertical-align: text-top;
+        }
+  
+        .custom-textarea .sortable {
+          margin-left: 5px;
+          cursor: pointer;
+        }
+  
+        .custom-textarea .cell-editMode {
+          display: flex;
+          justify-content: flex-start;
+        }
+  
+        .custom-textarea label {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          width: calc(100% - 20px);
+        }
+  
+        .custom-textarea input[type=checkbox],
+        .custom-textarea input[type=radio] {
+          width: 20px;
+          height: inherit;
+        }
+  
+        .custom-textarea.isStandAlone textarea,
+        .custom-textarea.isStandAlone input {
+          height: 30px;
+          width: 100%;
+        }
+  
+        .custom-textarea input {
+          width: 100px;
+        }
+  
+        .custom-textarea input,
+        .custom-textarea textarea {
+          height: 30px;
+          box-sizing: border-box;
+          border-radius: 3px;
+          border: 1px solid #ccc;
+          outline: none;
+        }
+  
+        .custom-textarea p,
+        .custom-textarea h1,
+        .custom-textarea h2,
+        .custom-textarea h3,
+        .custom-textarea h4,
+        .custom-textarea h5 {
+          word-break: normal;
+          word-wrap: break-word;
+          margin: 0;
+        }
+  
+        .custom-textarea table.confluenceTable {
+          border-collapse: collapse;
+          margin: 5px 0 5px 2px;
+          width: 100%;
+          table-layout: fixed;
+        }
+  
+        .custom-textarea td.confluenceTd {
+          border: 1px solid #cccccc;
+          padding: 3px 4px 3px 4px;
+        }
+  
+        .custom-textarea th.confluenceTh {
+          border: 1px solid #cccccc;
+          background: #f5f5f5;
+          padding: 3px 4px 3px 4px;
+          text-align: center;
+        }
+  
+        /* override for aui form styles (stalker comment) */
+  
+        .custom-textarea div.wiki-edit {
+          margin-bottom: 0;
+          padding-bottom: 0;
+        }
+  
+        .custom-textarea div.wiki-edit p {
+          padding: 0;
+        }
+  
+        .custom-textarea div.wiki-edit h1 {
+          font-size: 2.4em;
+        }
+  
+        .custom-textarea div.wiki-edit h2 {
+          font-size: 1.8em;
+          border: none;
+        }
+  
+        .custom-textarea div.wiki-edit h3 {
+          font-size: 1.3em;
+        }
+  
+        .custom-textarea div.wiki-edit h4 {
+          font-size: 1.2em;
+        }
+  
+        .custom-textarea div.wiki-edit h5 {
+          font-size: 1em;
+        }
+  
+        .custom-textarea div.wiki-edit h6 {
+          font-size: .9em;
+        }
+  
+        .custom-textarea div.wiki-edit img,
+        .custom-textarea div.wiki-edit a img,
+        .custom-textarea div.wiki-edit fieldset {
+          border: 0;
+        }
+  
+        .custom-textarea div.wiki-edit ul {
+          margin: 0 0 1em 2em;
+        }
+  
+        .custom-textarea div.wiki-edit ol {
+          list-style-type: decimal;
+          list-style-position: outside;
+          padding-left: 2.5em;
+        }
+  
+        .custom-textarea div.wiki-edit blockquote {
+          border-left: 2px solid #3c78b5;
+          font-size: 1em;
+          font-family: inherit;
+          margin-left: 0;
+          padding-left: 1em;
+        }
+  
+        .custom-textarea div.wiki-edit small,
+        .custom-textarea div.wiki-edit .small {
+          font-size: .9em;
+        }
+  
+        .custom-textarea div.wiki-edit strong,
+        .custom-textarea div.wiki-edit b,
+        .custom-textarea div.wiki-edit .bolded {
+          font-weight: bold;
+        }
+  
+        /* All wiki formatted content needs a specific selector prefixed with .wiki-edit also so that it overrides aui form styles */
+  
+        .custom-textarea .preformatted,
+        .custom-textarea div.wiki-edit .preformatted,
+        .custom-textarea .code,
+        .custom-textarea div.wiki-edit .code {
+          border: 1px solid #cccccc;
+          background: #f5f5f5;
+          font-size: 12px;
+          line-height: 1.33333333333333;
+          font-family: monospace;
+        }
+  
+        .custom-textarea .code-keyword,
+        .custom-textarea div.wiki-edit .code-keyword {
+          color: #000091;
+        }
+  
+        .custom-textarea .code-object,
+        .custom-textarea div.wiki-edit .code-object {
+          color: #910091;
+        }
+  
+        .custom-textarea .code-quote,
+        .custom-textarea div.wiki-edit .code-quote,
+        .custom-textarea .code-quote .code-keyword,
+        .custom-textarea div.wiki-edit .code-quote .code-keyword,
+        .custom-textarea .code-quote .code-object,
+        .custom-textarea div.wiki-edit .code-quote .code-object {
+          color: #009100;
+        }
+  
+        .custom-textarea .code-comment,
+        .custom-textarea div.wiki-edit .code-comment,
+        .custom-textarea .code-comment .code-keyword,
+        .custom-textarea div.wiki-edit .code-comment .code-keyword,
+        .custom-textarea .code-comment .code-object,
+        .custom-textarea div.wiki-edit .code-comment .code-object,
+        .custom-textarea .code-comment .code-quote,
+        .custom-textarea div.wiki-edit .code-comment .code-quote {
+          color: #808080;
+        }
+  
+        .custom-textarea .code-xml .code-keyword,
+        .custom-textarea div.wiki-edit .code-xml .code-keyword {
+          font-weight: bold;
+        }
+  
+        .custom-textarea .code-tag,
+        .custom-textarea div.wiki-edit .code-tag {
+          color: #000091;
+        }
+  
+        .custom-textarea .panel,
+        .custom-textarea div.wiki-edit .panel {
+          border: 1px solid #cccccc;
+          -moz-border-radius: 3px 3px 3px 3px;
+          border-radius: 3px 3px 3px 3px;
+          margin: 9px 0;
+        }
+  
+        .custom-textarea .panelHeader,
+        .custom-textarea div.wiki-edit .panelHeader {
+          border-bottom: 1px solid #cccccc;
+          padding: 9px 12px;
+        }
+  
+        .custom-textarea .panelContent,
+        .custom-textarea div.wiki-edit .panelContent {
+          padding: 9px 12px;
+        }
+  
+        .custom-textarea div.wiki-edit pre {
+          background: none;
+          border: none;
+          padding: 0;
+          width: 100%;
+        }
+  
+        .custom-textarea div.preformattedContent pre,
+        .custom-textarea div.codeContent pre {
+          max-height: 30em;
+          overflow: auto;
+          white-space: pre-wrap;
+          word-wrap: normal;
+        }
+  
+        .custom-textarea div.preformattedContent pre {
+          /* We value the user's formatting in {noformat} blocks. We should never introduce our own newlines in to unformatted blocks of text. */
+          /* white-space: pre; */
+          word-break: normal;
+        }
+  
+        .custom-textarea table div.preformattedContent pre {
+          /* ...unless they're in a table, in which case we'd prefer the content wrap than the user having to scroll to the bottom of the table to scroll it. */
+          word-wrap: break-word;
+          word-break: break-word;
+          white-space: pre-wrap;
+        }
+  
+        /* miscellaneous styles */
+  
+        .custom-textarea .linkerror {
+          background-color: #fcc;
+        }
+  
+        .custom-textarea .editPageInsertLinks,
+        .custom-textarea .editPageInsertLinks a {
+          font-weight: normal;
+          font-size: 9px;
+        }
+  
+        .custom-textarea .helpheading {
+          border-bottom: 1px solid #3b73af;
+          font-weight: bold;
+          background-color: #ddd;
+          padding: 4px 4px 2px;
+          margin: 0px;
+        }
+  
+        .custom-textarea .helpcontent {
+          padding: 4px 4px 20px 4px;
+          background-color: #fff;
+        }
+  
+        .custom-textarea .gridHover {
+          background-color: #f9f9f9;
+        }
+  
+        .custom-textarea .navmenu {
+          border: 1px solid #cccccc;
+        }
+  
+        /* side menu highlighting (e.g. space content screen) */
+  
+        .custom-textarea .optionPadded {
+          padding: 2px;
+        }
+  
+        .custom-textarea .optionSelected {
+          border: #dddddd solid #cccccc;
+          border: 1px solid #dddddd;
+          background-color: #ffffcc;
+          padding: 2px;
+          margin: -1px;
+        }
+  
+        .custom-textarea .optionSelected a {
+          font-weight: bold;
+          text-decoration: none;
+          color: black;
+        }
+  
+        .custom-textarea .menuheading {
+          border-bottom: 1px solid #3b73af;
+          font-weight: bold;
+          background-color: #ddd;
+          padding: 4px 4px 2px 4px;
+        }
+  
+        .custom-textarea .menuitems {
+          padding: 4px 4px 20px 4px;
+          background-color: #f5f5f5;
+        }
+  
+        .custom-textarea .pagetitle {
+          font-size: 22px;
+          font-weight: bold;
+          font-family: inherit;
+          color: #003366;
+        }
+  
+        .custom-textarea .wiki-edit-content.previewClass {
+          background-color: #E8F1FF;
+          padding: 0.3em 0.7em;
+        }
+  
+        .custom-textarea .wiki-icons {
+          width: 15px;
+          height: 15px;
+          border-radius: 3px;
+          /* display: inline-block; */
+          background-color: #deebff;
+          display: flex;
+          justify-content: center;
+          margin-right: 5px;
+        }
+  
+        .custom-textarea .cell-readMode.editMode {
+          display: none;
+        }
+  
+        .custom-textarea .cell-readMode.editMode+#editMode {
+          outline: none;
+        }
+      </style>
+    </custom-style>
+    <div class="cell-wrapper custom-textarea" data-columnid="status">
+      <div class="editable-cell-container">
+        <div class$="cell-readMode {{_checkRender(readMode)}}">
+          <div id="editableField" class="editable-field" on-click="_changeMode">
+            <div>
+              <span id="renderHTML" class="readValues"></span>
+            </div>
+          </div>
+        </div>
+        <div id="editMode" tabindex="-1">
+          <template is="dom-if" if="{{editMode}}">
+            <template is="dom-if" if="{{!showPreview}}">
+              <div class="cell-editMode">
+                <textarea placeholder="Enter Value..." value="{{editValue}}" on-keypress="handleChange1" on-change="handleChange" tabindex="100"
+                  on-focusout="_checkblur">{{editValue}}</textarea>
+              </div>
+            </template>
+            <template is="dom-if" if="{{showPreview}}">
+              <div>
+                <span class="previewValues"></span>
+              </div>
+            </template>
+            <div class="wikiIcons-wrapper">
+              <span class="wiki-icons wiki-renderer-icon stopBlur" on-click="_showPreview" tabindex="-1" title="preview">
+                <template is="dom-if" if="{{wikiPreview}}">
+                  <!-- <img src="{{wikiPreview}}"> -->
+                </template>
+              </span>
+              <a href="{{wikiHelpUrl}}" target="_blank" tabindex="-1" class="stopBlur">
+                <span class="wiki-icons wiki-help" title="Get local help about wiki markup help">
+                  <template is="dom-if" if="{{wikiHelp}}">
+                    <!-- <img src="{{wikiHelp}}"> -->
+                  </template>
+                </span>
+              </a>
+              <a>
+                <div>
+                </div>
+              </a>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </template>
+
+<script>
+  class CustomTextArea extends Polymer.Element {
+    static get is() { return "custom-textarea"; }
+    constructor() {
+      super();
+      this.readMode = true;
+      this.editMode = false;
+      this.showPreview = false;
+      this.wikiBaseUrl = '';
+      this.wikiPreview = '';
+      this.wikiHelp = '';
+      this.wikiHelpUrl = '';
+      this.previewValue = '';
+      this.editValue = '';
+      this.readValue = '';
+      this.key = '';
+      this.oldValue = '';
+    }
+
+    static get properties() {
+      return {
+        options : {
+          type : Array,
+          value: [],
+          observer: '_optionsChanged'
+        },
+        rowid : {
+          type : String,
+          value : ''
+        },
+        cellkey : {
+          type : String,
+          value : ''
+        },
+        mode : {
+          type : String,
+          value : 'read',
+          observer : '_modeChange'
+        },
+        inlineedit : {
+          type: Boolean,
+          value : true
+        },
+        setfocus : {
+          type: Boolean,
+          value : false,
+          observer : '_setFocus'
+        }
+      }
+    };
+
+    _setFocus(newValue) {
+      if(this.key === 'step' && this.editMode)
+        $(this.$.editMode).find('textarea').focus();
+    }
+
+    _optionsChanged(newValue) {
+      this.showPreview = false;
+      if(!newValue) {
+        return;
+      }
+      var value = JSON.parse(JSON.stringify(newValue));
+      this.key = value[0].key;
+      this.editValue = value[0].editModeValue;
+      this.readValue = value[0].readModeValue;
+      this.wikiBaseUrl = value[0].wikiBaseUrl;
+      this.wikiPreview = value[0].wikiPreview;
+      this.wikiHelp = value[0].wikiHelp;
+      this.wikiHelpUrl = value[0].wikiHelpUrl;
+      this.$.renderHTML.innerHTML = this.readValue;
+
+      var imgTags = this.$.renderHTML.querySelectorAll('img');
+      var that = this;
+      if (imgTags.length) {
+        var promisesArray = [];
+        imgTags.forEach(function (imgtag, index) {
+          promisesArray[index] = new Promise(function (resolve, reject) {
+            imgtag.onload = function () {
+              resolve();
+            }
+            imgtag.onerror = function () {
+              resolve();
+            }
+          })
+        })
+
+        Promise.all(promisesArray).then(function (values) {
+          this.dispatchEvent(new CustomEvent('adjustrowheight', { bubbles: true, composed: true }));
+        }).catch(function (reason) {
+          this.dispatchEvent(new CustomEvent('adjustrowheight', { bubbles: true, composed: true }));
+        });
+      }
+
+      this.oldValue = this.editValue;
+      if (!this.readValue) {
+        $(this.$.editableField).addClass('empty');
+      } else {
+        $(this.$.editableField).removeClass('empty');
+      }
+    }
+    
+    _checkRender(bool) {
+      return bool ? "readMode" : "editMode";
+    }
+
+    _checkIsGrid(bool) {
+      return bool ? "isGrid" : "isStandAlone";
+    }
+
+    _modeChange(newValue) {
+      if(this.mode === 'read') {
+        this.readMode = true;
+        this.editMode = false;
+      } else {
+        this.readMode = false;
+        this.editMode = true;
+        this.$.editMode.style.display = 'block';
+      }
+    }
+
+    _changeMode() {
+      this.readMode = false;
+      this.editMode = true;
+      this.$.editMode.style.display = 'block';
+      var that = this;
+
+      setTimeout(function() {
+        var targetElement = $(that.$.editMode).find('textarea');
+        $(targetElement).height('auto');
+        targetElement.focus();
+        element = targetElement[0];
+        if(element.scrollHeight > 1) {
+          // this.style.height = 'auto';
+          element.style.height = (element.scrollHeight - 2)+'px';
+          // var _scrollHeight = element.scrollHeight;
+          // _scrollHeight += 17;
+          // $(element).parent().height(_scrollHeight);
+        }
+        that.dispatchEvent(new CustomEvent('adjustrowheight',{bubbles: true, composed: true}));
+        targetElement.focus();
+      }, 0);
+    }
+
+    _showPreview() {
+      this.showPreview = !this.showPreview;
+      var that = this;
+      if(this.showPreview) {
+        var data = {
+          issueKey : "",
+          rendererType : "zephyr-wiki-renderer",
+          unrenderedMarkup : this.editValue
+        }
+        jQuery.ajax({
+          url: this.wikiBaseUrl + "/util/render",
+          type : "post",
+          contentType :"application/json",
+          data : JSON.stringify(data),
+          dataType: "json",
+          success : function(response) {
+            setTimeout(function(){
+              if(that.shadowRoot.querySelector('.previewValues'))
+               that.shadowRoot.querySelector('.previewValues').innerHTML = response.renderedHTML;
+               that.dispatchEvent(new CustomEvent('adjustrowheight', { bubbles: true, composed: true }));
+            }, 0);
+      		}
+        });
+      } else {
+        setTimeout(function () {
+          $(that.$.editMode).find('textarea').focus();
+          that.dispatchEvent(new CustomEvent('adjustrowheight', { bubbles: true, composed: true }));
+        }, 0);
+      }
+    }
+
+    handleChange1(ev) {
+      ev.stopPropagation();
+      ev.stopImmediatePropagation();
+      var that = this;
+      if(ev.target.scrollHeight > 1) {
+  			// this.style.height = 'auto';
+  			ev.target.style.height = (ev.target.scrollHeight - 2)+'px';
+  			// var _scrollHeight = ev.target.scrollHeight;
+        // _scrollHeight += 17;
+  			// $(ev.target).parent().height(_scrollHeight);
+  		}
+      setTimeout(function(){
+        // $(that.$.editMode).find('textarea').focus();
+        that.dispatchEvent(new CustomEvent('adjustrowheight',{bubbles: true, composed: true}));
+      }, 0);
+    }
+
+    _adjustHeight(target) {
+      if(target.scrollHeight > 1) {
+  			// this.style.height = 'auto';
+  			target.style.height = (target.scrollHeight - 2)+'px';
+  			// var _scrollHeight = target.scrollHeight;
+        // _scrollHeight += 17;
+        // $(target).parent().height(_scrollHeight);
+      }
+    }
+
+    handleChange(ev) {
+      this.editValue = ev.target.value;
+      ev.stopPropagation();
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+    }
+
+    _checkblur(ev) {
+      ev.preventDefault();
+
+      if(ev.relatedTarget && (ev.relatedTarget.localName === 'textarea' || ev.relatedTarget.className.indexOf("stopBlur") >= 0)) {
+        this.$.editMode.focus();
+      } else {
+        if(this.mode === 'read') {
+          this.readMode = true;
+          this.editMode = false;
+        }
+         if (this.key === 'result' && this.mode == 'edit' && ev.currentTarget.localName === 'textarea') {
+          var a = $('#testDetailGrid')[0].shadowRoot.querySelectorAll('.tick-button')[0];
+          $(a)[0].focus();
+        }
+        this._adjustHeight(ev.target);
+        if (this.readMode) {
+          this.$.editMode.style.display = 'none';
+        }
+        this.dispatchEvent(new CustomEvent('adjustrowheight', { bubbles: true, composed: true }));
+        if (this.oldValue !== this.editValue)
+          this.dispatchEvent(new CustomEvent('submitvalue', { detail: { oldValue: this.oldValue, type: 'LARGE_TEXT', value: this.editValue }, bubbles: true, composed: true }));
+      }
+    }
+  }
+  customElements.define(CustomTextArea.is, CustomTextArea);
+</script>
+
+</dom-module>

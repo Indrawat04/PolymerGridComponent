@@ -1,0 +1,1648 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="./single-select.html">
+<link rel="import" href="./custom-checkbox.html">
+<link rel="import" href="./custom-radio.html">
+<link rel="import" href="./custom-textarea.html">
+<link rel="import" href="./custom-text.html">
+<link rel="import" href="./drop-down.html">
+<link rel="import" href="./drop-downCheckbox.html">
+<link rel="import" href="./drop-downRadio.html">
+<link rel="import" href="./drop-downmultiselect.html">
+<link rel="import" href="./drop-downdate.html">
+
+
+<dom-module id="grid-cell">
+  <template>
+    <custom-style>
+      <style>
+        .attachment-count>span {
+          cursor: pointer;
+          color: #0052CC;
+          outline: none;
+        }
+  
+        .attachment-count>span.noAttachments {
+          cursor: auto;
+          color: grey;
+        }
+  
+        .add-attachments {
+          width: 20px;
+          height: 20px;
+          margin-left: 5px;
+          text-align: center;
+          vertical-align: baseline;
+          background-color: #deebff;
+          display: inline-block;
+          cursor: pointer;
+          border-radius: 4px;
+          position: relative;
+        }
+  
+        .attachment-wrapper {
+          display: flex;
+        }
+  
+        .attachment-wrapper {
+          position: relative;
+        }
+  
+        .attachment-wrapper .attachments-inlineDialogWrapper {
+          position: absolute;
+          z-index: 3000;
+          background-color: #fff;
+          border: 1px solid #dfe1e6;
+          border-bottom-left-radius: 3px;
+          border-bottom-right-radius: 3px;
+          box-shadow: 0 3px 6px rgba(0, 0, 0, .2);
+          display: flex;
+          width: max-content;
+          justify-content: space-between;
+          max-width: 350px;
+          flex-wrap: wrap;
+          padding: 7px 15px;
+        }
+  
+        .attachment-wrapper .attachments-inlineDialogWrapper.open {
+          display: flex;
+        }
+  
+        .isGrid.attachment-wrapper .attachments-inlineDialogWrapper {
+          position: fixed;
+          max-height: 400px;
+          overflow: auto;
+          /* visibility: visible; */
+        }
+  
+        .attachment-wrapper .attachments-inlineDialogWrapper.close {
+          /* visibility: hidden; */
+          display: none;
+        }
+  
+        .zephyr-attachment-thumb {
+          width: 165px;
+          height: 110px;
+          position: relative;
+          overflow: hidden;
+          border: 1px solid #e9e9e9;
+          border-radius: 3px;
+          margin: 7px 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+  
+        .zephyr-attachment-thumb-overlay {
+          position: absolute;
+          bottom: 0;
+          background: #42526e;
+          left: 0;
+          right: 0;
+          color: #fff;
+          text-align: center;
+        }
+  
+        div.zephyr-attachment-title {
+          height: 20px;
+        }
+  
+        div.zephyr-attachment-title a {
+          color: #fff;
+          text-decoration: none;
+        }
+  
+        .item-attachments {
+          padding-top: 5px;
+        }
+  
+        .item-attachments .attachment-content {
+          padding: 0;
+          display: inline-block;
+          margin-right: 0.581em;
+        }
+  
+        .zephyr-attachment-actions {
+          display: none;
+          position: absolute;
+          align-items: baseline;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          padding-left: 0;
+          width: 88px;
+          height: 30px;
+          justify-content: space-between;
+        }
+  
+        .zephyr-attachment-overlay {
+          position: absolute;
+          left: 0;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          background-color: black;
+          opacity: 0.4;
+          display: none;
+        }
+  
+        .zephyr-attachment-thumb:hover .zephyr-attachment-overlay {
+          display: block;
+        }
+  
+        .zephyr-attachment-thumb:hover .zephyr-attachment-actions {
+          display: flex;
+          justify-content: space-around;
+        }
+  
+        .zephyr-attachment-actions a.icon {
+          width: 15px;
+          height: 20px;
+        }
+  
+        .zephyr-attachment-actions a.icon-delete {
+          width: 24px;
+          height: 26px;
+        }
+  
+        .zephyr-attachment-actions a.icon-preview {
+          width: 37px;
+          height: 22px;
+        }
+  
+        .add-attachments img {
+          width: 50%;
+        }
+  
+        .defectsList {
+          display: flex;
+        }
+  
+        .defects-inlineDialogWrapper,
+        .stepDefects-inlineDialogWrapper {
+          position: absolute;
+          z-index: 3000;
+          background-color: #fff;
+          border: 1px solid #dfe1e6;
+          border-bottom-left-radius: 3px;
+          border-bottom-right-radius: 3px;
+          box-shadow: 0 3px 6px rgba(0, 0, 0, .2);
+          display: flex;
+          width: max-content;
+          width: 400px;
+          max-height: 200px;
+          overflow: auto;
+          flex-wrap: wrap;
+          padding: 10px;
+        }
+  
+        .defects-inlineDialogWrapper.open,
+        .stepDefects-inlineDialogWrapper.open {
+          display: block;
+        }
+  
+        .isGrid .defects-inlineDialogWrapper,
+        .isGrid .stepDefects-inlineDialogWrapper {
+          position: fixed;
+        }
+  
+        .defects-inlineDialogWrapper.close,
+        .stepDefects-inlineDialogWrapper.close {
+          /* visibility: hidden; */
+          display: none;
+        }
+  
+        .defect-hover {
+          position: relative
+        }
+  
+        .statusColor {
+          width: 30px;
+        }
+  
+        .defectsList+.defectsList .defectKey,
+        .defectsList+.defectsList .defectKey,
+        .defectStatus+.defectsList .defectSummary {
+          padding: 0 0 5px 5px;
+        }
+  
+        .defectKey,
+        .defectStatus {
+          width: 30%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          word-break: normal;
+          padding: 5px 0 5px 5px;
+        }
+  
+        .defectSummary {
+          width: 40%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          word-break: normal;
+          padding: 5px 0 5px 5px;
+        }
+  
+        .defectsList-Container {
+          border: 1px solid grey;
+          border-radius: 6px;
+        }
+  
+        .executionLevelDefects {
+          padding-bottom: 10px;
+        }
+  
+        .defectCount {
+          background: #F4F5F7;
+          font-size: 12px;
+          display: inline-block;
+          /* width: 30px; */
+          height: 15px;
+          padding: 2px 5px 5px;
+          text-align: center;
+          border-radius: 5px;
+        }
+  
+        .defects-container {
+          width: 100%;
+        }
+  
+        .cell-wrapper a {
+          color: #4c9aff;
+          text-decoration: none;
+        }
+  
+        .cell-wrapper a:hover {
+          color: #5e6c84;
+        }
+  
+        .add-attachments.hide {
+          display: none;
+        }
+  
+        .dropDown-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+          min-width: 1px;
+        }
+  
+        .isStandAlone .dropDown-wrapper.select-status span:nth-child(1),
+        .dropDown-wrapper.select-status span:nth-child(1) {
+          color: #FFF;
+          border: 0;
+        }
+  
+        .dropDown-wrapper span:nth-child(1) {
+          display: flex;
+          align-items: center;
+          height: 20px;
+          margin-right: 2px;
+          justify-content: center;
+          text-align: center;
+          flex-grow: 1;
+          color: #333;
+          background-color: #F7F8F9;
+          font-size: 12px;
+          overflow: hidden;
+          border-radius: 4px 0 0 4px;
+          border: 1px solid #DEE1E6;
+          box-sizing: border-box;
+        }
+  
+        .dropDown-wrapper>span:nth-child(1)>div {
+          text-overflow: ellipsis;
+          overflow: hidden;
+          white-space: nowrap;
+          width: 100%;
+        }
+  
+        .dropDown-wrapper>span:nth-child(1)>div:empty:after {
+          content: 'Choose Value...';
+        }
+  
+        .dropDown-wrapper .trigger-dropDown {
+          min-width: 20px;
+          width: 20px;
+          height: 20px;
+          vertical-align: baseline;
+          background-color: #deebff;
+          display: inline-block;
+          cursor: pointer;
+          border-radius: 0 3px 3px 0;
+          outline: none;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+  
+        .dropDown-wrapper .trigger-dropDown:hover {
+          background: #B2D4FF;
+        }
+  
+        .dropDown-container {
+          position: absolute;
+          z-index: 3000;
+          top: 21px;
+          left: 0;
+          background-color: #fff;
+          border: 1px solid #dfe1e6;
+          border-bottom-left-radius: 3px;
+          border-bottom-right-radius: 3px;
+          box-shadow: 0 3px 6px rgba(0, 0, 0, .2);
+          width: calc(100% - 25px);
+        }
+  
+        .dropDown-container ul {
+          list-style: none;
+          margin: 2px 0;
+          padding-left: 0;
+        }
+  
+        .dropDown-container ul li {
+          width: 100%;
+          height: 20px;
+          padding: 3px 10px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-size: 12px;
+          box-sizing: border-box;
+        }
+  
+        .dropDown-container ul li:hover {
+          background-color: #ebecf0;
+        }
+  
+        .cell-wrapper.drop-Down {
+          width: 125px;
+        }
+  
+        .cell-wrapper.drop-Down.isStandAlone {
+          width: auto;
+          min-width: 125px;
+        }
+  
+        .isStandAlone .dropDown-wrapper>span:nth-child(1) {
+          height: 30px;
+          color: #333;
+        }
+  
+        .isStandAlone .dropDown-wrapper .trigger-dropDown {
+          min-width: 30px;
+          height: 30px;
+        }
+  
+        .isStandAlone .dropDown-container {
+          width: 100%;
+          top: 30px;
+        }
+  
+        .dropDown-container.open {
+          display: block;
+        }
+  
+        .isGrid .dropDown-container.open {
+          width: 120px;
+        }
+  
+        .isGrid .dropDown-container {
+          position: fixed;
+          /* display: block; */
+          /* visibility: visible; */
+        }
+  
+        .dropDown-container.close {
+          /* visibility: hidden; */
+          display: none;
+        }
+  
+        .defectsSearchBox.open {
+          display: block;
+        }
+  
+        .isGrid .defectsSearchBox.close {
+          /* visibility: hidden; */
+          display: none;
+        }
+  
+        .isGrid .defectsSearchBox {
+          position: fixed;
+          display: block;
+          /* visibility: visible; */
+          font-size: 12px;
+          padding-top: 5px;
+        }
+  
+        .input-wrapper {
+          padding: 5px;
+        }
+  
+        .input-wrapper input {
+          width: 100%;
+          padding: 8px;
+          border-radius: 3px;
+          border: 1px solid #ccc;
+          box-sizing: border-box;
+          font-size: 12px;
+          height: 20px;
+        }
+  
+        .defectsSearchBox {
+          position: absolute;
+          z-index: 3000;
+          top: 21px;
+          width: 120px;
+          background-color: #fff;
+          border: 1px solid #dfe1e6;
+          border-bottom-left-radius: 3px;
+          border-bottom-right-radius: 3px;
+          box-shadow: 0 3px 6px rgba(0, 0, 0, .2);
+          color: #5E6C84;
+        }
+  
+        .inputResultWrapper,
+        .defectList-container {
+          padding-top: 5px;
+        }
+  
+        .defectList-container {
+          max-height: 100px;
+          overflow: auto;
+        }
+  
+        .defectList-wrapper {
+          display: flex;
+        }
+  
+        .defectList-wrapper div {
+          padding-right: 5px;
+        }
+  
+        .defectList-wrapper:hover {
+          background: #42526e;
+          color: #fff;
+          cursor: pointer;
+        }
+  
+        .defectLabel {
+          padding-bottom: 5px;
+          border-bottom: 1px solid #ecedf0;
+        }
+  
+        .trigger-dropDown.defectIcons img {
+          width: 50%;
+        }
+  
+        .stepLevelDefects span.heading {
+          justify-content: flex-start;
+          background-color: transparent;
+          font-size: 14px;
+          border: none;
+        }
+  
+        .removeFocusCss {
+          outline: none;
+        }
+  
+        .removeDefect {
+          width: 15px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          word-break: normal;
+          padding: 5px 0 5px 5px;
+          cursor: pointer;
+        }
+  
+        .removeDefect img {
+          width: 10px;
+        }
+  
+        .defect-hover .defectKey.strikeThrough {
+          text-decoration: line-through;
+        }
+  
+        .defects-popup-trigger {
+          cursor: pointer;
+        }
+  
+        .grid-cell .aui-button {
+          border-radius: 4px;
+          cursor: pointer;
+          font-family: Helvetica;
+          font-size: 12px;
+          height: 2.14285714em;
+          width: 100%;
+          line-height: 1.42857143;
+          background-color: #deebff !important;
+          color: #42526e !important;
+          padding: 5px 15px 10px 15px !important;
+          border: 0 !important;
+        }
+  
+        .create-input-sep {
+          padding-top: 8px;
+          margin-top: 10px;
+          border-top: 1px solid #ecedf0;
+        }
+  
+        .defectsSearchBox .input-wrapper input {
+          height: 2.14285714em;
+        }
+  
+        p,
+        pre {
+          margin: 0;
+        }
+  
+        pre {
+          white-space: normal;
+        }
+  
+        p,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5 {
+          word-break: normal;
+          word-wrap: break-word;
+          margin: 0;
+        }
+  
+        table.confluenceTable {
+          border-collapse: collapse;
+          margin: 5px 0 5px 2px;
+          width: 100%;
+          table-layout: fixed;
+        }
+  
+        td.confluenceTd {
+          border: 1px solid #cccccc;
+          padding: 3px 4px 3px 4px;
+        }
+  
+        th.confluenceTh {
+          border: 1px solid #cccccc;
+          background: #f5f5f5;
+          padding: 3px 4px 3px 4px;
+          text-align: center;
+        }
+  
+        /* override for aui form styles (stalker comment) */
+  
+        div.wiki-edit {
+          margin-bottom: 0;
+          padding-bottom: 0;
+        }
+  
+        div.wiki-edit p {
+          padding: 0;
+        }
+  
+        div.wiki-edit h1 {
+          font-size: 2.4em;
+        }
+  
+        div.wiki-edit h2 {
+          font-size: 1.8em;
+          border: none;
+        }
+  
+        div.wiki-edit h3 {
+          font-size: 1.3em;
+        }
+  
+        div.wiki-edit h4 {
+          font-size: 1.2em;
+        }
+  
+        div.wiki-edit h5 {
+          font-size: 1em;
+        }
+  
+        div.wiki-edit h6 {
+          font-size: .9em;
+        }
+  
+        div.wiki-edit img,
+        div.wiki-edit a img,
+        div.wiki-edit fieldset {
+          border: 0;
+        }
+  
+        div.wiki-edit ul {
+          margin: 0 0 1em 2em;
+        }
+  
+        div.wiki-edit ol {
+          list-style-type: decimal;
+          list-style-position: outside;
+          padding-left: 2.5em;
+        }
+  
+        div.wiki-edit blockquote {
+          border-left: 2px solid #3c78b5;
+          font-size: 1em;
+          font-family: inherit;
+          margin-left: 0;
+          padding-left: 1em;
+        }
+  
+        div.wiki-edit small,
+        div.wiki-edit .small {
+          font-size: .9em;
+        }
+  
+        div.wiki-edit strong,
+        div.wiki-edit b,
+        div.wiki-edit .bolded {
+          font-weight: bold;
+        }
+  
+        /* All wiki formatted content needs a specific selector prefixed with .wiki-edit also so that it overrides aui form styles */
+  
+        .preformatted,
+        div.wiki-edit .preformatted,
+        .code,
+        div.wiki-edit .code {
+          border: 1px solid #cccccc;
+          background: #f5f5f5;
+          font-size: 12px;
+          line-height: 1.33333333333333;
+          font-family: monospace;
+        }
+  
+        .code-keyword,
+        div.wiki-edit .code-keyword {
+          color: #000091;
+        }
+  
+        .code-object,
+        div.wiki-edit .code-object {
+          color: #910091;
+        }
+  
+        .code-quote,
+        div.wiki-edit .code-quote,
+        .code-quote .code-keyword,
+        div.wiki-edit .code-quote .code-keyword,
+        .code-quote .code-object,
+        div.wiki-edit .code-quote .code-object {
+          color: #009100;
+        }
+  
+        .code-comment,
+        div.wiki-edit .code-comment,
+        .code-comment .code-keyword,
+        div.wiki-edit .code-comment .code-keyword,
+        .code-comment .code-object,
+        div.wiki-edit .code-comment .code-object,
+        .code-comment .code-quote,
+        div.wiki-edit .code-comment .code-quote {
+          color: #808080;
+        }
+  
+        .code-xml .code-keyword,
+        div.wiki-edit .code-xml .code-keyword {
+          font-weight: bold;
+        }
+  
+        .code-tag,
+        div.wiki-edit .code-tag {
+          color: #000091;
+        }
+  
+        .panel,
+        div.wiki-edit .panel {
+          border: 1px solid #cccccc;
+          -moz-border-radius: 3px 3px 3px 3px;
+          border-radius: 3px 3px 3px 3px;
+          margin: 9px 0;
+        }
+  
+        .panelHeader,
+        div.wiki-edit .panelHeader {
+          border-bottom: 1px solid #cccccc;
+          padding: 9px 12px;
+        }
+  
+        .panelContent,
+        div.wiki-edit .panelContent {
+          padding: 9px 12px;
+        }
+  
+        div.wiki-edit pre {
+          background: none;
+          border: none;
+          padding: 0;
+          width: 100%;
+        }
+  
+        div.preformattedContent pre,
+        div.codeContent pre {
+          max-height: 30em;
+          overflow: auto;
+          white-space: pre-wrap;
+          word-wrap: normal;
+        }
+  
+        div.preformattedContent pre {
+          /* We value the user's formatting in {noformat} blocks. We should never introduce our own newlines in to unformatted blocks of text. */
+          /* white-space: pre; */
+          word-break: normal;
+        }
+  
+        table div.preformattedContent pre {
+          /* ...unless they're in a table, in which case we'd prefer the content wrap than the user having to scroll to the bottom of the table to scroll it. */
+          word-wrap: break-word;
+          word-break: break-word;
+          white-space: pre-wrap;
+        }
+  
+        /* miscellaneous styles */
+  
+        .linkerror {
+          background-color: #fcc;
+        }
+  
+        .editPageInsertLinks,
+        .editPageInsertLinks a {
+          font-weight: normal;
+          font-size: 9px;
+        }
+  
+        .helpheading {
+          border-bottom: 1px solid #3b73af;
+          font-weight: bold;
+          background-color: #ddd;
+          padding: 4px 4px 2px;
+          margin: 0px;
+        }
+  
+        .helpcontent {
+          padding: 4px 4px 20px 4px;
+          background-color: #fff;
+        }
+  
+        .gridHover {
+          background-color: #f9f9f9;
+        }
+  
+        .navmenu {
+          border: 1px solid #cccccc;
+        }
+  
+        /* side menu highlighting (e.g. space content screen) */
+  
+        .optionPadded {
+          padding: 2px;
+        }
+  
+        .optionSelected {
+          border: #dddddd solid #cccccc;
+          border: 1px solid #dddddd;
+          background-color: #ffffcc;
+          padding: 2px;
+          margin: -1px;
+        }
+  
+        .optionSelected a {
+          font-weight: bold;
+          text-decoration: none;
+          color: black;
+        }
+  
+        .menuheading {
+          border-bottom: 1px solid #3b73af;
+          font-weight: bold;
+          background-color: #ddd;
+          padding: 4px 4px 2px 4px;
+        }
+  
+        .menuitems {
+          padding: 4px 4px 20px 4px;
+          background-color: #f5f5f5;
+        }
+  
+        .pagetitle {
+          font-size: 22px;
+          font-weight: bold;
+          font-family: inherit;
+          color: #003366;
+        }
+  
+        .wiki-edit-content.previewClass {
+          background-color: #E8F1FF;
+          padding: 0.3em 0.7em;
+        }
+  
+        .wiki-icons {
+          width: 15px;
+          height: 15px;
+          border-radius: 3px;
+          /* display: inline-block; */
+          background-color: #deebff;
+          display: flex;
+          justify-content: center;
+          margin-right: 5px;
+        }
+  
+        .cell-wrapper.hideValue {
+          display: none;
+        }
+  
+        .cell-wrapper img {
+          max-width: 100%;
+        }
+      </style>
+    </custom-style>
+    <div class$="cell-wrapper grid-cell {{_checkRender(htmlContent)}}" data-columnid="{{datacolumn.key}}">
+      <div>
+        <span id="renderHTML" class="htmlValues"></span>
+      </div>
+    </div>
+    <template is="dom-if" if="{{readMode}}">
+      <div class="cell-wrapper" data-columnid="{{datacolumn.key}}">
+        <template is="dom-if" if="{{valueUrl}}">
+          <a href="{{valueUrl}}">{{value}}</a>
+        </template>
+        <template is="dom-if" if="{{!valueUrl}}">
+          <span id="myspan" title={{value}}>{{value}}</span>
+        </template>
+      </div>
+    </template>
+    <template is="dom-if" if="{{dropDown}}">
+      <drop-down isgrid="{{isGrid}}" mode="{{mode}}" imgurl="{{imgUrl}}" options="{{options}}" inlineedit="{{inlineedit}}" on-submitvalue="_submit"></drop-down>
+    </template>
+    <template is="dom-if" if="{{defect}}">
+      <div class$="cell-wrapper {{_checkIsGrid(isGrid)}}" data-columnid="{{datacolumn.key}}">
+        <div class="defect-hover" on-mouseenter="_defectMouseEnter" on-mouseleave="_defectMouseLeave">
+          <span class="defectCount"> {{datarow.executionDefectCount}} | {{datarow.stepDefectCount}} </span>
+          <template is="dom-repeat" items="{{defectKeys}}" as="keys">
+            <a href="{{keys.url}}" class$="defectKey {{_strikeThrough(keys.resolution)}}">{{keys.value}}</a>
+            <template is="dom-if" if="{{keys.separator}}">
+              <span>, </span>
+            </template>
+          </template>
+          <div class$="defects-inlineDialogWrapper {{_openDefectDialog(openDefectInlineDialog)}}">
+            <div class="defects-container">
+              <template is="dom-if" if="{{executionsDefect.length}}">
+                <div class="executionLevelDefects">
+                  <span>Defects Filed For {{datarow.issueKey}}</span>
+                  <div class="defectsList-Container">
+                    <template is="dom-repeat" items="{{executionsDefect}}">
+                      <div class="defectsList">
+                        <div class="statusColor" style$="background-color : {{item.color}}"></div>
+                        <div class$="defectKey {{_strikeThrough(item.resolution)}}">
+                          <a href="{{defectContextPath}}/browse/{{item.key}}">{{item.key}}</a>
+                        </div>
+                        <div class="defectStatus">{{item.status}}</div>
+                        <div class="defectSummary">{{item.summary}}</div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </template>
+              <template is="dom-if" if="{{stepDefect.length}}">
+                <div class="stepLevelDefects">
+                  <span>Step Level Defect</span>
+                  <div class="defectsList-Container">
+                    <template is="dom-repeat" items="{{stepDefect}}">
+                      <div class="defectsList">
+                        <div class="statusColor" style$="background-color : {{item.color}}"></div>
+                        <div class$="defectKey {{_strikeThrough(item.resolution)}}">
+                          <a href="{{defectContextPath}}/browse/{{item.key}}">{{item.key}}</a>
+                        </div>
+                        <div class="defectStatus">{{item.status}}</div>
+                        <div class="defectSummary">{{item.summary}}</div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+    <template is="dom-if" if="{{singleSelect}}">
+      <drop-down isgrid="{{isGrid}}" imgurl="{{imgUrl}}" mode="{{mode}}" options="{{options}}" inlineedit="{{inlineedit}}" on-submitvalue="_submit"></drop-down>
+    </template>
+    <template is="dom-if" if="{{multiSelect}}">
+      <drop-downmultiselect isgrid="{{isGrid}}" imgurl="{{imgUrl}}" mode="{{mode}}" options="{{options}}" inlineedit="{{inlineedit}}"
+        on-submitvalue="_submit"></drop-downmultiselect>
+    </template>
+    <template is="dom-if" if="{{checkbox}}">
+      <drop-downcheckbox rowid="{{rowId}}" cellkey="{{cellId}}" isgrid="{{isGrid}}" imgurl="{{imgUrl}}" mode="{{mode}}" options="{{options}}"
+        inlineedit="{{inlineedit}}" on-submitvalue="_submit"></drop-downcheckbox>
+    </template>
+    <template is="dom-if" if="{{radio}}">
+      <drop-downradio rowid="{{rowId}}" cellkey="{{cellId}}" isgrid="{{isGrid}}" imgurl="{{imgUrl}}" mode="{{mode}}" options="{{options}}"
+        inlineedit="{{inlineedit}}" on-submitvalue="_submit"></drop-downradio>
+    </template>
+    <template is="dom-if" if="{{date}}">
+      <drop-downdate isgrid="{{isGrid}}" mode="{{mode}}" imgurl="{{imgUrl}}" options="{{options}}" inlineedit="{{inlineedit}}"
+        on-triggerdatechooser="_dateChooser"></drop-downdate>
+    </template>
+    <template is="dom-if" if="{{wikiTextarea}}">
+      <custom-textarea setfocus="{{setfocus}}" isgrid="{{isGrid}}" mode="{{mode}}" imgurl="{{imgUrl}}" options="{{options}}" inlineedit="{{inlineedit}}"
+        on-adjustrowheight="_adjustRowHeight" on-submitvalue="_submit"></custom-textarea>
+    </template>
+    <template is="dom-if" if="{{textarea}}">
+      <custom-text isgrid="{{isGrid}}" mode="{{mode}}" options="{{options}}" type="TEXTAREA" inlineedit="{{inlineedit}}" on-submitvalue="_submit"
+        on-adjustrowheight="_adjustRowHeight"></custom-text>
+    </template>
+    <template is="dom-if" if="{{textfield}}">
+      <custom-text isgrid="{{isGrid}}" mode="{{mode}}" options="{{options}}" type="TEXT" inlineedit="{{inlineedit}}" on-submitvalue="_submit"
+        on-adjustrowheight="_adjustRowHeight"></custom-text>
+    </template>
+    <template is="dom-if" if="{{attachment}}">
+      <template is="dom-if" if="{{!isEditMode}}">
+        <div class$="attachment-wrapper {{_checkIsGrid(isGrid)}}">
+          <div class="attachment-count">
+            <template is="dom-if" if="{{attachmentsObject.isEnable}}">
+              <span on-click="_triggerInlineDialog" on-focusout="_closeInlineDialog" tabindex="-1">{{attachmentsObject.length}} attached</span>
+              <div class$="attachments-inlineDialogWrapper {{_openAtttachmentDialog(openInlineDialog)}}">
+                <template is="dom-repeat" items="{{attachmentsObject.attachmentsList}}">
+                  <div class="zephyr-attachment-thumb">
+                    <div class="zephyr-attachment-overlay"></div>
+                    <div class="zephyr-attachment-actions">
+                      <a tabindex="-1" class="icon-preview" title="Preview" on-click="_showImageDetail" data-fileid="{{item.fileId}}">
+                        <!-- <img src="{{attachmentsObject.baseUrl}}/download/resources/com.thed.zephyr.je/images/icons/view-attachment_icon.svg"> -->
+                      </a>
+                      <template is="dom-if" if="{{canAddAttachment}}">
+                        <a tabindex="-1" class="icon-delete entity-operations-delete" title="Delete this attachment" val="{{datarow.id}}:{{item.fileId}}:{{item.fileName}}"
+                          on-click="_deleteAttachment">
+                          <!-- <img src="{{attachmentsObject.baseUrl}}/download/resources/com.thed.zephyr.je/images/icons/delete-attachment_icon.svg"> -->
+                        </a>
+                      </template>
+                    </div>
+                    <template is="dom-if" if="{{item.fileId}}">
+                      <!-- <img height="100%" border="0" alt="{{item.fileIconAltText}}" src="{{attachmentsObject.baseUrl}}/plugins/servlet/schedule/viewAttachment?id={{item.fileId}}&amp;name={{item.fileName}}"> -->
+                    </template>
+                    <div class="zephyr-attachment-thumb-overlay">
+                      <div class="zephyr-attachment-title">
+                        <a title="{{item.fileName}}" href="{{attachmentsObject.baseUrl}}/plugins/servlet/schedule/viewAttachment?id={{item.fileId}}&amp;name={{item.fileName}}">{{item.fileName}}</a>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </template>
+            <template is="dom-if" if="{{!attachmentsObject.isEnable}}">
+              <span class="noAttachments">0 attached</span>
+            </template>
+          </div>
+          <div class$="add-attachments {{_canAddAttachment(canAddAttachment)}}" on-click="_addAttachments" title={{tooltipLabel}}>
+            <template is="dom-if" if="{{attachmentsObject.baseUrl}}/download/resources/com.thed.zephyr.je/images/icons/plus_button.svg">
+              <a>
+                <!-- <img src="{{attachmentsObject.baseUrl}}/download/resources/com.thed.zephyr.je/images/icons/plus_button.svg"> -->
+              </a>
+            </template>
+          </div>
+        </div>
+      </template>
+    </template>
+    <template is="dom-if" if="{{stepDefects}}">
+      <div class$="cell-wrapper drop-Down {{_checkIsGrid(isGrid)}}" data-columnid="{{datacolumn.key}}">
+        <div class="dropDown-wrapper">
+          <span id="dropDown" class="defects-popup-trigger">
+            <div class="removeFocusCss setDefectDialogFocus" on-click="_openStepLevelDefectDialog" on-focusout="_checkBlur" tabindex="-1">{{stepDefectsLength}} defects</div>
+          </span>
+          <span class="trigger-dropDown defectIcons" on-click="_triggerStepLevelDefectDropDown" tabindex="-1">
+            <!-- <img src="{{imgurlAddDefect}}"> -->
+          </span>
+          <span class="trigger-dropDown defectIcons" style="margin-left: 2px;" on-click="_defectPicker">
+            <!-- <img src="{{imgurlCreateIssue}}"> -->
+          </span>
+          <div class$="stepDefects-inlineDialogWrapper {{_checkStepLevelDefectDialog(openStepDefectInlineDialog)}}">
+            <div class="defects-container" tabindex="-1">
+              <div class="stepLevelDefects">
+                <span class="heading">Step Level Defects Field</span>
+                <div class="defectsList-Container">
+                  <template is="dom-repeat" items="{{stepLevelDefects}}">
+                    <div class="defectsList">
+                      <div class="statusColor" style$="background-color : {{item.color}}"></div>
+                      <div class$="defectKey {{_strikeThrough(item.resolution)}}">
+                        <a href="{{defectContextPath}}/browse/{{item.key}}" class="content">{{item.key}}</a>
+                      </div>
+                      <div class="defectStatus">{{item.status}}</div>
+                      <div class="defectSummary">{{item.summary}}</div>
+                      <div class="removeDefect" on-mousedown="_removeDefect" data-keyid="{{item.key}}">
+                        <!-- <img src="{{removeDefectImg}}"> -->
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class$="defectsSearchBox {{_defectSearchBox(openDefectSearchBox)}}">
+            <div class="input-wrapper">
+              <div>
+                <button type="button" class="aui-button" on-mousedown="_createDefect">Create defect</button>
+              </div>
+              <div class="create-input-sep">Add defect</div>
+              <input type="text" class="ajax-input" placeholder="Type to Search..." on-keypress="_fetchDefects" on-change="_enterDefects"
+                on-focusout="_triggerStepLevelDefectDropDown" autofocus="">
+              <div class$="inputResultWrapper {{_defectSearchResult(showDefectSearchResult)}}">
+                <div class="defectLabel">{{defectLabel}}</div>
+                <div class="defectList-container">
+                  <template is="dom-repeat" items="{{defectResult}}">
+                    <div class="defectList-wrapper" on-mousedown="_defectSelected" data-defectid="{{item.key}}" data-createdefect="true">
+                      <div class="defectImage">
+                        <!-- <img src="{{contextPath}}{{item.img}}"> -->
+                      </div>
+                      <div class="defectId" data-id="1">{{item.key}}</div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+  </template>
+  <script>
+    class GridCell extends Polymer.Element {
+      static get is() { return "grid-cell"; }
+      constructor() {
+        super();
+        this.openInlineDialog = false;
+        this.attachment = false;
+        this.singleSelect = false;
+        this.multiSelect = false;
+        this.showDefectSearchResult = false;
+        this.checkbox = false;
+        this.openDefectSearchBox = false;
+        this.radio = false;
+        this.textarea = false;
+        this.textfield = false;
+        this.radio = false;
+        this.date = false;
+        this.readMode = false;
+        this.defect = false;
+        this.dropDown = false;
+        this.wikiTextarea = false;
+        this.htmlContent = false;
+        this.canAddAttachment = false;
+        this.stepDefects = false;
+        this.defectKeys = [];
+        this.executionsDefect = [];
+        this.stepDefect = [];
+        this.openDefectInlineDialog = false;
+        this.openStepDefectInlineDialog = false;
+        this.showDefault = false;
+        this.options = [];
+        this.value = '';
+        this.rowId = '';
+        this.columnId = '';
+        this.isEditMode = false;
+        this.isGrid = true;
+        this.contextPath = '';
+        this.imgUrl = '';
+      }
+
+      static get properties() {
+        return {
+          datarow: {
+            type: Object,
+            observer: 'check',
+          },
+          datacolumn: {
+            type: Object,
+            observer: 'check'
+          },
+          inlineedit: {
+            type: Boolean,
+            value: true
+          },
+          rowindex: {
+            type: String,
+          },
+          ispopup: {
+            type: String,
+          }
+        }
+      };
+
+      check() {
+        this._initializer();
+      }
+
+      _checkIsGrid(bool) {
+        return bool ? "isGrid" : "isStandAlone";
+      }
+
+      _showImageDetail(event) {
+        var fileId = event.currentTarget.dataFileid;
+        var obj = {
+          fileId: fileId,
+          attachmentArray: this.attachmentsObject.attachmentsList
+        }
+        this.dispatchEvent(new CustomEvent('attachmentpreview', { detail: obj, bubbles: true, composed: true }));
+        this._closeInlineDialog();
+      }
+
+      _openDefectDialog(bool) {
+        let that = this;
+        setTimeout(function () {
+          if (that.isGrid && bool) {
+            var triggerElement = that.shadowRoot.querySelector('.defect-hover').getBoundingClientRect();
+            var viewportHeight = window.innerHeight;
+            var viewportWidth = window.innerWidth;
+            var height = that.shadowRoot.querySelector('.defects-inlineDialogWrapper').clientHeight;
+            var topHeight = triggerElement.top + triggerElement.height + 2;
+            if (viewportHeight > topHeight + 200) $(that.shadowRoot.querySelector('.defects-inlineDialogWrapper')).css({ 'top': topHeight, 'bottom': 'auto', 'left': triggerElement.left }); else {
+              $(that.shadowRoot.querySelector('.defects-inlineDialogWrapper')).css({ 'top': 'auto', 'bottom': viewportHeight - topHeight + triggerElement.height + 5, 'left': triggerElement.left });
+            }
+
+            if (viewportWidth < triggerElement.left + 350) {
+              $(that.shadowRoot.querySelector('.stepDefects-inlineDialogWrapper')).css({ 'left': triggerElement.left + triggerElement.width - 422 });
+            }
+          }
+        }, 0);
+        return bool ? "open" : "close";
+      }
+
+      _openAtttachmentDialog(bool) {
+        return bool ? "open" : "close";
+      }
+
+      _canAddAttachment(bool) {
+        return bool ? "show" : "hide";
+      }
+
+      _adjustRowHeight(ev) {
+        this.dispatchEvent(new CustomEvent('adjustrowheight', { bubbles: true, composed: true, detail: { index: this.rowindex } }));
+      }
+
+      _triggerInlineDialog(ev) {
+        this.openInlineDialog = !this.openInlineDialog;
+        if (this.isGrid) {
+          var triggerElement = ev.currentTarget.getBoundingClientRect();
+          var viewportHeight = window.innerHeight;
+          var height = this.shadowRoot.querySelector('.attachments-inlineDialogWrapper').clientHeight;
+          var topHeight = triggerElement.top + triggerElement.height + 2;
+          if (viewportHeight > (topHeight + height))
+            $(this.shadowRoot.querySelector('.attachments-inlineDialogWrapper')).css({ 'top': topHeight, 'left': triggerElement.left })
+          else {
+            $(this.shadowRoot.querySelector('.attachments-inlineDialogWrapper')).css({ 'top': topHeight - triggerElement.height - 5 - height, 'left': triggerElement.left})
+          }
+        }
+        $(ev.target).focus();
+      }
+
+      _closeInlineDialog(ev) {
+        if (ev.relatedTarget && ev.relatedTarget.localName === 'a') {
+          this.openInlineDialog = true;
+        }
+        else {
+          this.openInlineDialog = false;
+        }
+      }
+
+      _initializer() {
+        var that = this;
+
+        this.attachment = false;
+        this.openInlineDialog = false;
+        // this.singleSelect = false;
+        this.multiSelect = false;
+        this.checkbox = false;
+        this.radio = false;
+        this.date = false;
+        this.executionsDefect = [];
+        this.stepDefect = [];
+        this.textarea = false;
+        this.textfield = false;
+        this.radio = false;
+        this.readMode = false;
+        this.stepDefects = false;
+        this.defect = false;
+        this.dropDown = false;
+        this.isEditMode = false;
+        this.htmlContent = false;
+        this.wikiTextarea = false;
+        this.openDefectInlineDialog = false;
+        this.openStepDefectInlineDialog = false;
+        this.defectKeys = [];
+        this.remainingDefectList = [];
+        this.defectResult = [];
+        this.defectLabel = '';
+        this.contextPath = '';
+        this.defectContextPath = "AJS.contextPath()";
+        this.canAddAttachment = false;
+        this.tooltipLabel = '';
+
+        var type = this.datacolumn.type;
+        this.rowId = this.datarow.id;
+        this.columnId = this.datacolumn.key;
+        this.cellId = this.columnId;
+        if (this.ispopup == 'true') {
+          this.cellId = this.cellId + '-popup';
+        }
+        this.value = this.datarow[this.datacolumn.key];
+
+        if (this.datarow.editMode) {
+          this.mode = 'edit';
+          this.isEditMode = true;
+        } else {
+          this.mode = 'read';
+          this.isEditMode = false;
+        }
+
+      
+        if (type === 'HTMLContent') {
+          this.htmlContent = true;
+          this.$.renderHTML.innerHTML = this.value;
+        } else if (type === 'String') {
+          if (this.columnId === 'defects' && (this.datarow.stepDefectCount != 0 || this.datarow.totalDefectCount != 0)) {
+            var defectsData = this.datarow[this.columnId] || [];
+            var length = defectsData.length - 1;
+            this.executionsDefect = this.datarow[this.columnId];
+            if (this.datarow['stepDefect']) {
+              this.stepDefect = this.datarow['stepDefect'];
+            }
+            if (this.datarow['showPopup']) {
+              this.openDefectInlineDialog = true;
+            } else {
+              this.openDefectInlineDialog = false;
+            }
+            defectsData.map(function (defect, index) {
+              var separator = true;
+              if (index === length) {
+                separator = false;
+              }
+              var url =" AJS.contextPath()" + '/browse/' + defect.key;
+              that.defectKeys.push({ value: defect.key, url: url, separator: separator, resolution: defect.resolution });
+            })
+            this.defect = true;
+          } else {
+            this.valueUrl = '';
+            if (this.datacolumn.key == 'issueKey') {
+              this.valueUrl = "AJS.contextPath()" + '/browse/' + this.value;
+            } else if (this.datacolumn.key == 'cycleName') {
+              this.valueUrl = "AJS.contextPath() " + "/DisplayCycle.jspa?cycleId=" + this.datarow.cycleId + "&versionId=" + this.datarow.versionId + "&issueKey=" + this.datarow.issueKey;
+            } else if (this.datacolumn.key == 'assignee') {
+              this.value = this.datarow['assignedToDisplay'];
+            }
+
+            if (!this.value) {
+              this.value = '-'
+            }
+            this.readMode = true;
+          }
+        } else if (type === 'SELECT_STATUS') {
+          this.options = [];
+          var statusMap = this.datacolumn.executionSummaries;
+          var status;
+          if (this.datarow.status) {
+            status = this.datarow.status;
+          } else {
+            status = this.datarow.executionStatus;
+          }
+          Object.keys(statusMap).map(index => {
+            let obj = {
+              "content": statusMap[index].name,
+              "value": statusMap[index].id,
+              "selected": (statusMap[index].id === Number(status) ? true : false),
+              "isStatus": true,
+              "color": statusMap[index].color,
+              "readOnly": !that.datacolumn.editable,
+            }
+            that.options.push(obj);
+          })
+          this.dropDown = true;
+          this.imgUrl = this.datacolumn.imgUrl;
+        } else if (type === 'SINGLE_SELECT') {
+          this.options = JSON.parse(JSON.stringify(this.datacolumn.options));
+          var selectedValues = this.datarow[this.datacolumn.key];
+          this.options.map(option => {
+            if (option.value === selectedValues) {
+              option.selected = true;
+            } else {
+              option.selected = false;
+            }
+          })
+          this.singleSelect = true;
+          this.imgUrl = this.datacolumn.imgUrl;
+        } else if (type === 'MULTI_SELECT') {
+          var selectedValues = [];
+          this.options = JSON.parse(JSON.stringify(this.datacolumn.options));
+          selectedValues = this.datarow[this.datacolumn.key] && this.datarow[this.datacolumn.key].split(',');
+          this.options.map(option => {
+            if (selectedValues && selectedValues.indexOf(option.value) >= 0) {
+              option.selected = true;
+            } else {
+              option.selected = false;
+            }
+          })
+          this.multiSelect = true;
+          this.imgUrl = this.datacolumn.imgUrl;
+        } else if (type === 'CHECKBOX') {
+          this.options = JSON.parse(JSON.stringify(this.datacolumn.options));
+          var selectedValues = this.datarow[this.datacolumn.key] || '';
+          selectedValues = selectedValues.split(',');
+          if (selectedValues.length) {
+            this.options.map(option => {
+              if (selectedValues.indexOf(option.value) >= 0) {
+                option.selected = true;
+              } else {
+                option.selected = false;
+              }
+            })
+          }
+          this.checkbox = true;
+          this.imgUrl = this.datacolumn.imgUrl;
+        } else if (type === 'RADIO_BUTTON') {
+          this.options = JSON.parse(JSON.stringify(this.datacolumn.options));
+          var selectedValues = this.datarow[this.datacolumn.key];
+          this.options.map(option => {
+            if (option.value === that.datarow[that.datacolumn.key]) {
+              option.selected = true;
+            } else {
+              option.selected = false;
+            }
+          })
+          this.radio = true;
+          this.imgUrl = this.datacolumn.imgUrl;
+        } else if (type === 'DATE_TIME' || type === 'DATE') {
+          this.options = [{ "value": this.datarow[this.datacolumn.key] }];
+          this.imgUrl = this.datacolumn.imgUrl;
+          this.date = true;
+        } else if (type === 'TEXT') {
+          this.options = [{ "value": this.datarow[this.datacolumn.key], "type": "TEXT" }];
+          this.textfield = true;
+        } else if (type === 'NUMBER') {
+          this.options = [{ "value": this.datarow[this.datacolumn.key], "type": "NUMBER" }];
+          this.textfield = true;
+        } else if (type === 'LARGE_TEXT') {
+          if (this.datacolumn.editKey === 'htmlComment') {
+            this.options = [{ "value": this.datarow[this.datacolumn.editKey], "type": "textarea", "readValue": this.datarow[this.datacolumn.key], "isHTMLKey": true }]
+          } else {
+            this.options = [{ "value": this.datarow[this.datacolumn.key], "type": "textarea" }];
+          }
+          this.textarea = true;
+        } else if (type === 'WIKI_LARGE_TEXT') {
+          this.options = [{ 'key': this.datacolumn.key, "editModeValue": this.datarow[this.datacolumn.key], "readModeValue": this.datarow[this.datacolumn.editKey], "wikiBaseUrl": this.datacolumn['wikiBaseUrl'], "wikiPreview": this.datacolumn['wikiPreview'], "wikiHelp": this.datacolumn['wikiHelp'], "wikiHelpUrl": this.datacolumn['wikiHelpUrl'] }];
+          this.wikiTextarea = true;
+        } else if (type === 'ATTACHMENTS') {
+          var map = this.datarow[this.datacolumn.key] || [];
+          this.canAddAttachment = this.datacolumn.canAddAttachment;
+          this.tooltipLabel = this.datacolumn.tooltipLabel;
+          if (map.length) {
+            this.attachmentsObject = {
+              isEnable: true,
+              length: map.length,
+              attachmentsList: map,
+              baseUrl: this.datacolumn.baseUrl,
+            }
+          } else {
+            this.attachmentsObject = {
+              isEnable: false,
+              length: 0,
+              attachmentsList: map,
+              baseUrl: this.datacolumn.baseUrl,
+            }
+          }
+          this.attachment = true;
+        } else if (type === 'STEP_DEFECTS') {
+          this.stepLevelDefects = this.datarow[this.datacolumn.key] || [];
+          this.stepDefectsLength = this.stepLevelDefects.length;
+          this.stepLevelDefects.map(function (defect) {
+            that.remainingDefectList.push(defect.key);
+          });
+          this.stepDefects = true;
+          this.contextPath = this.datacolumn['contextPath'] || '';
+          this.imgurlAddDefect = this.datacolumn['imgurlAddDefect'];
+          this.imgurlCreateIssue = this.datacolumn['imgurlCreateIssue'];
+          this.removeDefectImg = this.datacolumn['imgRemoveDefect'];
+          if (this.datarow['showDefectsResult']) {
+            var result = this.datarow['stepLevelDefect'].sections[0];
+            this.defectResult = result.issues;
+            this.contextPath =" AJS.contextPath()";
+            if (this.defectResult.length) {
+              this.defectLabel = result.label + ' ' + result.sub;
+              this.showDefault = false;
+            }
+            else {
+              this.defectLabel = result.label + ' Showing 0 of 0 result';
+              this.showDefault = true;
+            }
+            this.showDefectSearchResult = true;
+          } else {
+            this.defectResult = [];
+            this.defectLabel = '';
+            this.openDefectSearchBox = false;
+            this.showDefectSearchResult = false;
+          }
+        }
+        if (that.updaterowheight === 'true') {
+          setTimeout(function () {
+            that.dispatchEvent(new CustomEvent('adjustrowheight', { bubbles: true, composed: true, detail: { index: that.rowindex, loader: true } }));
+          }, 0);
+        }
+      }
+
+      _checkBlur(ev) {
+        if (ev.relatedTarget && (ev.relatedTarget.className.indexOf('defects-container') >= 0 || ev.relatedTarget.className.indexOf('content') >= 0)) {
+          this.shadowRoot.querySelector('.setDefectDialogFocus').focus();
+          this.openStepDefectInlineDialog = true;
+        } else {
+          this.openStepDefectInlineDialog = false;
+          if (this.isDefectRemoved)
+            this.dispatchEvent(new CustomEvent('submitcell', { detail: { value: this.remainingDefectList, key: 'stepDefect', rowId: this.rowId, cellKey: 'defectList' }, bubbles: true, composed: true }));
+        }
+      }
+
+      _checkRender(bool) {
+        return bool ? 'showValue' : 'editValue';
+      }
+
+      _strikeThrough(status) {
+        return status === 'Done' ? 'strikeThrough' : 'notDone';
+      }
+
+      _removeDefect(ev) {
+        this.remainingDefectList = this.remainingDefectList.filter(function (defect) {
+          return defect !== ev.currentTarget.dataKeyid;
+        });
+        this.isDefectRemoved = true;
+        $(ev.currentTarget).parents('.defectsList').css("display", "none");
+      }
+
+      _openStepLevelDefectDialog() {
+        var defectsList = this.shadowRoot.querySelectorAll('.defectsList');
+        if (defectsList.length) {
+          this.shadowRoot.querySelectorAll('.defectsList').forEach(function (defect) {
+            $(defect).css("display", "flex");
+          });
+          this.openStepDefectInlineDialog = !this.openStepDefectInlineDialog;
+        }
+      }
+
+      _checkStepLevelDefectDialog(bool) {
+        let that = this;
+        if (that.isGrid && bool) {
+          var triggerElement = that.shadowRoot.querySelector('.dropDown-wrapper').getBoundingClientRect();
+          var viewportHeight = window.innerHeight;
+          var viewportWidth = window.innerWidth;
+          var height = that.shadowRoot.querySelector('.stepDefects-inlineDialogWrapper').clientHeight;
+          var topHeight = triggerElement.top + triggerElement.height + 2;
+          if (viewportHeight > (topHeight + 200)) {
+            $(that.shadowRoot.querySelector('.stepDefects-inlineDialogWrapper')).css({ 'top': topHeight, 'bottom': 'auto', 'left': triggerElement.left })
+          }
+          else {
+            $(that.shadowRoot.querySelector('.stepDefects-inlineDialogWrapper')).css({ 'top': 'auto', 'bottom': viewportHeight - topHeight + triggerElement.height + 5, 'left': triggerElement.left })
+          }
+
+          if (viewportWidth < (triggerElement.left + 350)) {
+            $(that.shadowRoot.querySelector('.stepDefects-inlineDialogWrapper')).css({ 'left': triggerElement.left + triggerElement.width - 422 })
+          }
+        }
+        return bool ? "open" : "close";
+      }
+
+      _triggerStepLevelDefectDropDown() {
+        this.openDefectSearchBox = !this.openDefectSearchBox;
+        if (!this.openDefectSearchBox) {
+          this.defectResult = [];
+          this.defectLabel = '';
+          this.shadowRoot.querySelector('.ajax-input').value = '';
+          this.showDefectSearchResult = false;
+        }
+      }
+
+      _defectSearchBox(bool) {
+        let that = this;
+        if (that.isGrid && bool) {
+          var triggerElement = that.shadowRoot.querySelector('.dropDown-wrapper').getBoundingClientRect();
+          var viewportHeight = window.innerHeight;
+          var height = that.shadowRoot.querySelector('.defectsSearchBox').clientHeight;
+          var topHeight = triggerElement.top + triggerElement.height + 2;
+          if (viewportHeight > (topHeight + 200))
+            $(that.shadowRoot.querySelector('.defectsSearchBox')).css({ 'top': topHeight, 'bottom': 'auto', 'left': triggerElement.left })
+          else {
+            $(that.shadowRoot.querySelector('.defectsSearchBox')).css({ 'top': 'auto', 'bottom': viewportHeight - topHeight + triggerElement.height + 5, 'left': triggerElement.left })
+          }
+          setTimeout(function () {
+            that.shadowRoot.querySelector('.ajax-input').focus();
+          }, 100);
+        }
+        return bool ? "open" : "close";
+      }
+
+      _defectSearchResult(bool) {
+        return bool ? "open" : "close";
+      }
+
+      _fetchDefects(ev) {
+        ev.stopPropagation();
+        ev.stopImmediatePropagation();
+        var value = ev.target.value + ev.key;
+        var obj = {
+          id: this.rowId,
+          query: value,
+          defectsPopup: true
+        }
+        this.defectValue = value;
+        this.dispatchEvent(new CustomEvent('fetchdefect', { detail: obj, bubbles: true, composed: true }));
+      }
+
+      _defectSelected(ev) {
+        var defectList = [];
+        var wasAlreadyAdded = true;
+        this.stepLevelDefects.map(function (defect) {
+          defectList.push(defect.key);
+        })
+        if (!ev.currentTarget.dataCreatedefect) {
+          if (defectList.indexOf(ev.currentTarget.dataDefectid) == -1) {
+            defectList.push(ev.currentTarget.dataDefectid);
+            wasAlreadyAdded = false;
+          }
+        } else {
+          defectList.push(this.defectValue);
+        }
+        var obj = {
+          id: this.rowId,
+          query: '',
+          defectsPopup: false,
+          wasAlreadyAdded: wasAlreadyAdded
+        }
+        this.defectValue = '';
+        this.dispatchEvent(new CustomEvent('fetchdefect', { detail: obj, bubbles: true, composed: true }));
+        this.dispatchEvent(new CustomEvent('submitcell', { detail: { wasAlreadyAdded: wasAlreadyAdded, value: defectList, key: 'stepDefect', rowId: this.rowId, cellKey: 'defectList' }, bubbles: true, composed: true }));
+      }
+
+      _defectMouseEnter(e) {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        var obj = {
+          id: this.rowId,
+          defectsPopup: true
+        }
+        this.dispatchEvent(new CustomEvent('defecthover', { detail: obj, bubbles: true, composed: true }));
+      }
+
+      _defectMouseLeave(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        var obj = {
+          id: this.rowId,
+          defectsPopup: false
+        }
+        this.dispatchEvent(new CustomEvent('defecthover', { detail: obj, bubbles: true, composed: true }));
+      }
+
+      _dateChooser(e) {
+        var obj = {
+          'type': this.datacolumn.type,
+          'rowId': this.rowId,
+          'cellKey': this.columnId,
+          'value': e.detail.value,
+          'event': e.detail.event,
+          'isEditMode': this.isEditMode,
+          'onlyUpdateValue': e.detail.onlyUpdateValue,
+        }
+        this.dispatchEvent(new CustomEvent('datepicker', { detail: obj, bubbles: true, composed: true }));
+      }
+
+      _submit(e) {
+        var value = '';
+        if (e.detail.type === 'CHECKBOX' || e.detail.type === 'MULTI_SELECT') {
+          var valueContent = e.detail.value;
+          value = valueContent.toString();
+        } else {
+          value = e.detail.value;
+        }
+        if (this.mode === 'read') {
+          this.dispatchEvent(new CustomEvent('submitcell', { detail: { value: value, contentValue: e.detail.contentValue, rowId: this.rowId, cellKey: this.columnId }, bubbles: true, composed: true }));
+        } else {
+          this.dispatchEvent(new CustomEvent('savecellvalue', { detail: { value: value, contentValue: e.detail.contentValue, rowId: this.rowId, cellKey: this.columnId }, bubbles: true, composed: true }));
+        }
+      }
+
+      _addAttachments(e) {
+        this.dispatchEvent(new CustomEvent('submitcell', { detail: { key: 'addAttachment', rowId: this.rowId, cellKey: this.columnId }, bubbles: true, composed: true }));
+      }
+
+      _createDefect(e) {
+        this.dispatchEvent(new CustomEvent('submitcell', { detail: { key: 'createDefect', rowId: this.rowId, cellKey: this.columnId }, bubbles: true, composed: true }));
+      }
+
+      _defectPicker(e) {
+        this.dispatchEvent(new CustomEvent('submitcell', { detail: { key: 'defectPicker', rowId: this.rowId, cellKey: this.columnId }, bubbles: true, composed: true }));
+      }
+
+      _deleteAttachment(e) {
+        this.dispatchEvent(new CustomEvent('submitcell', { detail: { key: 'deleteAttachment', value: e.currentTarget.val, rowId: this.rowId, cellKey: this.columnId }, bubbles: true, composed: true }));
+        this.openInlineDialog = false;
+      }
+    }
+    customElements.define(GridCell.is, GridCell);
+  </script>
+</dom-module>

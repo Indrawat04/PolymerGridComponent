@@ -1,0 +1,419 @@
+<dom-module id="drop-down">
+    <template>
+      <custom-style>
+        <style>
+          .drop-down .dropDown-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-width: 1px;
+          }
+    
+          .drop-down.isStandAlone .dropDown-wrapper.select-status span:nth-child(1),
+          .drop-down .dropDown-wrapper.select-status span:nth-child(1) {
+            color: #FFF;
+            border: 0;
+          }
+    
+          .drop-down .dropDown-wrapper span:nth-child(1) {
+            display: flex;
+            align-items: center;
+            height: 20px;
+            margin-right: 2px;
+            padding-right: 10px;
+            justify-content: center;
+            text-align: center;
+            flex-grow: 1;
+            color: #333;
+            background-color: #F7F8F9;
+            font-size: 12px;
+            overflow: hidden;
+            border-radius: 4px 0 0 4px;
+            border: 1px solid #DEE1E6;
+            box-sizing: border-box;
+          }
+    
+          .drop-down .dropDown-wrapper>span:nth-child(1)>div {
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            width: 100%;
+          }
+    
+          .drop-down .dropDown-wrapper>span:nth-child(1)>div:empty:after {
+            content: 'Choose Value...';
+          }
+    
+          .drop-down .dropDown-wrapper .trigger-dropDown {
+            min-width: 20px;
+            height: 20px;
+            vertical-align: baseline;
+            background-color: #deebff;
+            display: inline-block;
+            cursor: pointer;
+            border-radius: 0 3px 3px 0;
+            outline: none;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+    
+          .drop-down .dropDown-wrapper .trigger-dropDown:hover {
+            background: #B2D4FF;
+          }
+    
+          .drop-down .dropDown-container {
+            position: absolute;
+            z-index: 300;
+            top: 21px;
+            left: 0;
+            background-color: #fff;
+            border: 1px solid #dfe1e6;
+            border-bottom-left-radius: 3px;
+            border-bottom-right-radius: 3px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, .2);
+            width: calc(100% - 25px);
+          }
+    
+          .drop-down .dropDown-container ul {
+            list-style: none;
+            margin: 2px 0;
+            padding-left: 0;
+            max-height: 100px;
+            overflow: auto;
+          }
+    
+          .drop-down .dropDown-container ul li {
+            width: 100%;
+            padding: 3px 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+            box-sizing: border-box;
+          }
+    
+          .drop-down .dropDown-container ul li.active {
+            background-color: #ebecf0;
+            background-image: none;
+          }
+    
+          .drop-down.cell-wrapper {
+            width: 125px;
+          }
+    
+          .drop-down.cell-wrapper.isStandAlone {
+            width: auto;
+            min-width: 125px;
+          }
+    
+          .drop-down.isStandAlone .dropDown-wrapper>span:nth-child(1) {
+            height: 30px;
+            color: #333;
+            padding-right: 15px;
+          }
+    
+          .drop-down.isStandAlone .dropDown-wrapper .trigger-dropDown {
+            min-width: 30px;
+            height: 30px;
+          }
+    
+          .drop-down.isStandAlone .dropDown-container {
+            width: 100%;
+            top: 30px;
+          }
+    
+          .drop-down .dropDown-container.open {
+            display: block;
+          }
+    
+          .drop-down.isGrid .dropDown-container.open {
+            width: 120px;
+          }
+    
+          .drop-down.isGrid .dropDown-container {
+            position: fixed;
+            /* visibility: visible; */
+          }
+    
+          .drop-down .dropDown-container.close {
+            /* visibility: hidden; */
+            display: none;
+          }
+    
+          .drop-down .readOnly .dropDown-wrapper span:nth-child(1) {
+            border-radius: 4px;
+          }
+    
+          .drop-down .readOnly .dropDown-wrapper .trigger-dropDown {
+            display: none;
+          }
+    
+          .drop-down .dropDown-wrapper.select-status .remove-data {
+            display: none;
+          }
+    
+          .drop-down.isStandAlone .remove-data {
+            right: 40px;
+            font-weight: bold;
+          }
+    
+          .drop-down .remove-data {
+            position: absolute;
+            right: 26px;
+            font-weight: 500;
+            cursor: pointer;
+            top: 50%;
+            transform: translateY(-50%);
+          }
+        </style>
+      </custom-style>
+      <div class$="cell-wrapper drop-down {{_checkIsGrid(isgrid)}} {{_isReadOnly(readOnly)}}" data-columnid="status">
+        <div class$="dropDown-wrapper {{_checkStatus(isStatus)}}">
+          <span id="dropDown" title="{{value}}">
+            <div>{{value}}</div>
+          </span>
+          <template is="dom-if" if="{{value}}">
+            <span class="remove-data" on-click="_emptyData">x</span>
+          </template>
+          <span class="trigger-dropDown" on-click="_triggerDropDown" tabindex="-1" on-focusout="_checkblur" on-keydown="_keydown">
+            <template is="dom-if" if="{{imgurl}}">
+              <!-- <img src="{{imgurl}}"> -->
+            </template>
+          </span>
+          <div class$="dropDown-container {{_dropDownOpen(openDropDown)}}">
+            <ul>
+              <iron-list items="{{cloneOptions}}">
+                <template>
+                  <div>
+                    ...
+                  </div>
+                </template>
+              </iron-list>
+              <template indexAs="{{index}}" is="dom-repeat" items="{{cloneOptions}}">
+                <template is="dom-if" if="{{!item.selected}}">
+                  <li tabindex="-1" class$="{{_checkOptionClass(item.highlighted)}}" data-index={{index}} data-value="{{item.value}}" on-mouseenter="_highlightOption"
+                    on-click="_handleChange" title={{item.content}}>{{item.content}}</li>
+                </template>
+              </template>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </template>
+
+<script>
+  class DropDown extends Polymer.Element {
+    static get is() { return "drop-down"; }
+    constructor() {
+      super();
+      this.openDropDown = false;
+      this.value = '';
+      this.isStatus = false;
+      this.cloneOptions = [];
+      this.readOnly = false;
+      this.currentIndex = -1;
+      this.oldValue = '';
+    }
+
+    static get properties() {
+      return {
+        options : {
+          type : Array,
+          value: [],
+          observer : '_optionsChanged'
+        },
+        rowid : {
+          type : String,
+          value : ''
+        },
+        cellkey : {
+          type : String,
+          value : ''
+        },
+        isgrid : {
+          type: Boolean,
+          value: false
+        },
+        imgurl : {
+          type : String,
+          value : ''
+        }
+      }
+    };
+
+    _optionsChanged(newValue) {
+      this.cloneOptions = JSON.parse(JSON.stringify(newValue));
+      this._assignValues(newValue);
+    }
+
+    _checkIsGrid(bool) {
+      return bool ? "isGrid" : "isStandAlone";
+    }
+
+    _isReadOnly(bool) {
+      return bool ? "readOnly" : "";
+    }
+
+    _checkStatus(bool) {
+        return bool ? "select-status" : "";
+    }
+
+    _assignValues(value) {
+      var that = this;
+      this.value = '';
+      value.map(option => {
+        if(option.selected) {
+          that.value = option.content;
+          that.selectedValue = option.value;
+          that.readOnly = option.readOnly;
+          if(option.color) {
+            that.isStatus = true;
+            $(that.$.dropDown).css('background', option.color);
+          }
+        }
+      });
+      this.oldValue = this.value;
+    }
+
+    _triggerDropDown(ev) {
+      this.openDropDown = !this.openDropDown;
+      if(this.isgrid) {
+        var triggerElement = ev.currentTarget.getBoundingClientRect();
+        var viewportHeight = window.innerHeight;
+        var height = this.shadowRoot.querySelector('.dropDown-container').clientHeight;
+        var topHeight = triggerElement.top + triggerElement.height + 2;
+        var parentWidth = $(ev.currentTarget).parents('.cell-wrapper')[0].clientWidth;
+        if(viewportHeight > (topHeight + height))
+          $(this.shadowRoot.querySelector('.dropDown-container')).css({'top':topHeight,'left':triggerElement.left - parentWidth + triggerElement.width , 'width':parentWidth})
+        else {
+          $(this.shadowRoot.querySelector('.dropDown-container')).css({ 'top': topHeight - triggerElement.height - height - 8, 'left':triggerElement.left - parentWidth + triggerElement.width , 'width':parentWidth})
+        }
+      }
+    }
+
+    _dropDownOpen(bool) {
+        return bool ? "open" : "close";
+    }
+
+    _checkOptionClass(bool) {
+        return bool ? "active" : "";
+    }
+
+    _keydown(e) {
+      if (e.keyCode == 38 || e.keyCode == 40 || e.keyCode == 13) {
+        var newIndex = this.currentIndex;
+        this.cloneOptions.forEach(function (option, index) {
+          option.highlighted = false;
+        });
+        if (e.keyCode == 38) {
+          newIndex = Math.max(this.currentIndex - 1, 0);
+          if (this.cloneOptions[newIndex].selected) {
+            newIndex = Math.max(this.currentIndex - 2, 0);
+          }
+          this.cloneOptions[newIndex].highlighted = true;
+          this.shadowRoot.querySelector('.dropDown-container.open ul').scrollTop -= 23; //Hieght of li element
+        } else if (e.keyCode == 40) {
+          newIndex = Math.min(this.currentIndex + 1, this.cloneOptions.length - 1);
+          if (this.cloneOptions[newIndex].selected) {
+            newIndex = Math.min(this.currentIndex + 2, this.cloneOptions.length - 1);
+          }
+          this.cloneOptions[newIndex].highlighted = true;
+          if (newIndex != 0) {
+            this.shadowRoot.querySelector('.dropDown-container.open ul').scrollTop += 23;  //Hieght of li element
+          }
+        } else if (e.keyCode == 13 && this.currentIndex > -1) {
+          this._handleChange({
+            target: {
+              innerHTML: this.cloneOptions[this.currentIndex].content,
+              dataValue: this.cloneOptions[this.currentIndex].value
+            }
+          }
+          )
+          this.currentIndex = -1;
+        }
+        this.currentIndex = newIndex;
+        this.cloneOptions = JSON.parse(JSON.stringify(this.cloneOptions));
+        e.preventDefault();
+      }
+    }
+
+    _highlightOption(e) {
+      this.currentIndex = e.target.dataIndex;
+      this.cloneOptions.forEach(function (option, index) {
+        option.highlighted = false;
+      });
+      this.cloneOptions[this.currentIndex].highlighted = true;
+      this.cloneOptions = JSON.parse(JSON.stringify(this.cloneOptions));
+    }
+
+    _handleChange(e) {
+      var that = this;
+      this.openDropDown = false;
+      this.value = e.target.innerHTML;
+      this.selectedValue = e.target.dataValue;
+      this.selectedContent = this.value;
+      this.cloneOptions.map(function (option, index) {
+        var path = 'cloneOptions.' + index.toString();
+        if (option.isStatus) {
+          if (that.selectedValue === option.value) {
+            that.set(path, { content: option.content, value: option.value, selected: true, isStatus: option.isStatus, color: option.color, readOnly: option.readOnly });
+            if (option.color) {
+              $(that.$.dropDown).css('background', option.color);
+            }
+          } else {
+            that.set(path, { content: option.content, value: option.value, selected: false, isStatus: option.isStatus, color: option.color, readOnly: option.readOnly });
+          }
+        } else {
+          if (that.selectedValue === option.value) {
+            that.set(path, { content: option.content, value: option.value, selected: true });
+          } else {
+            that.set(path, { content: option.content, value: option.value, selected: false });
+          }
+        }
+      });
+      if (this.oldValue !== this.selectedContent)
+        this.dispatchEvent(new CustomEvent('submitvalue', { detail: { type: 'SINGLE_SELECT', value: e.target.dataValue, contentValue: e.target.innerHTML }, bubbles: true, composed: true }));
+      this._checkblur();
+    }
+
+    _emptyData(ev) {
+      this.openDropDown = false;
+      this.value = '';
+      this.selectedValue = '';
+      this.selectedContent = '';
+      this.cloneOptions.map(function (option, index) {
+        var path = 'cloneOptions.' + index.toString();
+        if (option.isStatus) {
+          if (that.selectedValue === option.value) {
+            that.set(path, { content: option.content, value: option.value, selected: true, isStatus: option.isStatus, color: option.color, readOnly: option.readOnly });
+            if (option.color) {
+              $(that.$.dropDown).css('background', option.color);
+            }
+          } else {
+            that.set(path, { content: option.content, value: option.value, selected: false, isStatus: option.isStatus, color: option.color, readOnly: option.readOnly });
+          }
+        } else {
+          if (that.selectedValue === option.value) {
+            that.set(path, { content: option.content, value: option.value, selected: true });
+          } else {
+            that.set(path, { content: option.content, value: option.value, selected: false });
+          }
+        }
+      });
+      this.dispatchEvent(new CustomEvent('submitvalue', { detail: { oldValue: this.oldValue, type: 'SINGLE_SELECT', value: this.selectedValue }, bubbles: true, composed: true }));
+    }
+    
+    _checkblur(ev) {
+      if (ev && ev.relatedTarget && ev.relatedTarget.tagName == 'LI') {
+        this.openDropDown = true;
+      } else {
+        this.openDropDown = false;
+      };
+    }
+  }
+  customElements.define(DropDown.is, DropDown);
+</script>
+
+</dom-module>

@@ -1,0 +1,1755 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../PolymerElements/grid-cell.html">
+<link rel="import" href="./custom-checkbox.html">
+
+<dom-module id="grid-component">
+  <template>
+    <custom-style>
+      <style>
+        #unfreezeColumns .table-cell,
+        #freezeColumns .table-cell {
+          min-width: 120px;
+        }
+  
+        #unfreezeColumns .step .table-cell,
+        #freezeColumns .step .table-cell,
+        #unfreezeColumns .data .table-cell,
+        #freezeColumns .data .table-cell,
+        #unfreezeColumns .result .table-cell,
+        #freezeColumns .result .table-cell {
+          width: 200px;
+        }
+  
+        #draggableColumn .table-cell .dragItss img {
+          cursor: move;
+        }
+  
+        #draggableColumn .table-cell .dragItss:active {
+          cursor: move;
+        }
+  
+        /* .table-wrapper {
+          max-height: 200px;
+          overflow: auto;
+        } */
+  
+        .table-wrapper,
+        .table-row {
+          display: flex;
+          flex-direction: row;
+          flex-wrap: nowrap;
+          min-height: 45px;
+        }
+  
+        .table-row.selected .table-columns {
+          background-color: #EBECF0;
+        }
+  
+        .table-row.edit.selected .table-columns {
+          background-color: inherit;
+        }
+  
+        .table-wrapper .table-columns {
+          padding: 5px 0;
+        }
+  
+        .table-wrapper .table-columns.disabled {
+          pointer-events: none;
+          opacity: 0.4
+        }
+  
+        .table-columns-wrapper {
+          display: flex;
+          flex-direction: column;
+          padding-bottom: 10px;
+          position: relative;
+        }
+  
+        .table-columns {
+          display: flex;
+          flex-direction: row;
+          flex-wrap: nowrap;
+          flex: auto;
+          /* width: 100%; */
+        }
+  
+        .table-columns.TEXT .table-cell,
+        .table-columns.LARGE_TEXT .table-cell {
+          width: 200px;
+        }
+  
+        .table-cell {
+          display: flex;
+          flex-direction: row;
+          min-height: 35px;
+          width: 120px;
+          justify-content: flex-start;
+          padding: 0 5px;
+          word-break: normal;
+          word-wrap: break-word;
+          color: #172B4D;
+        }
+  
+        .table-wrapper .table-row.table-headerRow .table-columns {
+          padding: 0;
+        }
+  
+        .table-row.table-headerRow .table-cell {
+          align-items: flex-end;
+          color: #5E6C84;
+          padding-bottom: 7px;
+        }
+  
+        .table-row.table-headerRow .table-cell .cell-wrapper {
+          display: flex;
+        }
+  
+        .table-row.table-headerRow .table-cell .cell-wrapper span.column-header {
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          max-width: 85px;
+        }
+  
+        .table-wrapper.issueView .table-row.table-headerRow .table-columns {
+          padding: 0;
+        }
+  
+        .selected .icon-pushpin {
+          color: black;
+        }
+  
+        .icon-pushpin {
+          color: grey;
+          margin-right: 5px;
+          cursor: pointer;
+        }
+  
+        .unfreezed-cells.table-columns-wrapper {
+          width: 100%;
+          overflow: auto;
+        }
+  
+        .freezed-cells.table-columns-wrapper {
+          max-width: 260px;
+          background: #F6F7F8;
+        }
+  
+        .action-cell.table-columns-wrapper {
+          min-width: 70px;
+        }
+  
+        .check-cell.table-columns-wrapper {
+          max-width: 25px;
+          background: #F6F7F8;
+        }
+  
+        .check-cell .table-cell {
+          width: 25px;
+          padding: 0 5px;
+          overflow: hidden;
+        }
+  
+        .drag-cell {
+          max-width: 25px;
+        }
+  
+        .sortable {
+          margin-left: 5px;
+          cursor: pointer;
+        }
+  
+        #gridActions {
+          background-color: #F6F7F8;
+          position: relative;
+        }
+  
+        #gridActions.testDetailExecution,
+        #gridActions.moveExecutionGrid {
+          display: none;
+        }
+  
+        #gridActions.moveExecutionGrid .action-row,
+        #gridActions.moveExecutionGrid .action-row {
+          width: 0px;
+          display: none;
+        }
+  
+        .action-row {
+          display: flex;
+          justify-content: space-around;
+  
+        }
+  
+        .action-row .table-cell {
+          min-width: unset;
+          width: auto;
+        }
+  
+        .actions-wrapper {
+          background-color: #deebff;
+          width: 20px;
+          height: 20px;
+          cursor: pointer;
+          text-align: center;
+          border-radius: 3px;
+        }
+  
+  
+        .actions-wrapper img {
+          width: 15px;
+          height: 10px;
+        }
+  
+        .actions-wrapper:hover {
+          background: #B2D4FF;
+        }
+  
+        .action-row .table-columns {
+          justify-content: space-evenly;
+        }
+  
+        .freeze-toggle {
+          cursor: pointer;
+          margin-right: 5px;
+        }
+  
+        .table-headerRow .table-columns {
+          border-bottom: 1px solid #ECEDF0;
+        }
+  
+        #grid-actions .table-headerRow .table-columns {
+          padding: 0 10px;
+        }
+  
+        .bulkAction-container button,
+        .buttonPanel button {
+          background-color: #deebff;
+          color: #42526e;
+          min-width: 100px;
+          outline: none;
+          border: 0px;
+          box-sizing: border-box;
+          border-radius: 3.01px;
+          cursor: pointer;
+          display: flex;
+          font-family: inherit;
+          font-size: 14px;
+          font-variant: normal;
+          font-weight: 300;
+          height: 2.14285714em;
+          line-height: 1.42857143;
+          padding: 4px 10px;
+          text-decoration: none;
+          vertical-align: baseline;
+          text-align: left;
+          white-space: nowrap;
+        }
+  
+        .bulkAction-container button:hover,
+        .buttonPanel button:hover {
+          background: #B2D4FF;
+        }
+  
+        .bulkAction-container button img {
+          height: 14px;
+          margin-right: 5px;
+          align-self: center;
+        }
+  
+        .bulkAction-container button.columnChooser-btn {
+          margin-left: 10px;
+          padding-left: 12px;
+        }
+  
+        .bulkAction-container button.columnChooser-btn img {
+          height: 5px;
+          padding-left: 12px;
+          width: 10px;
+          margin-right: 0;
+        }
+  
+        .bulkAction-container button:disabled,
+        .buttonPanel button:disabled {
+          color: #A5ADBA;
+          background-color: #F4F5F7;
+          pointer-events: none;
+          cursor: auto;
+        }
+  
+        .bulkAction-buttons {
+          display: flex;
+          justify-content: space-between;
+          padding: 5px 0px 10px;
+        }
+  
+        .bulkAction-buttons .bulkAction-container:not(:only-child) {
+          margin: 0 10px 0 0;
+        }
+  
+        .action-container {
+          display: flex;
+          justify-content: space-between;
+        }
+  
+        .hide {
+          display: none;
+        }
+  
+        .column-chooser-wrap {
+          position: absolute;
+          right: 100%;
+          top: 12px;
+        }
+  
+        .column-chooser-icon {
+          position: relative;
+        }
+  
+        .column-chooser-cont {
+          position: absolute;
+          background-color: #fff;
+          border: 1px solid #dfe1e6;
+          border-bottom-left-radius: 3px;
+          border-bottom-right-radius: 3px;
+          box-shadow: 0 3px 6px rgba(0, 0, 0, .2);
+          z-index: 1;
+          width: 220px;
+        }
+  
+        .isGrid .column-chooser-cont {
+          position: fixed;
+        }
+  
+        .column-chooser-cont.close {
+          /* visibility: hidden; */
+          display: none;
+        }
+  
+        .contextMenuIcon {
+          background: #4C9AFF;
+          border: 0;
+          border-radius: 50%;
+          width: 23px;
+          height: 23px;
+          display: flex;
+          position: absolute;
+          right: 0;
+          top: -2px;
+          align-items: center;
+          justify-content: center;
+        }
+  
+        .issueView .contextMenuIcon {
+          background: #deebff;
+          border: 1px solid #ecedf0;
+        }
+  
+        .checkbox-wrapper {
+          display: flex;
+          flex-wrap: wrap;
+          width: calc(100% - 20px);
+          padding: 3px 10px 10px;
+          max-height: 150px;
+          overflow: auto;
+        }
+  
+        .checkbox-container {
+          width: 80px;
+          padding: 3px 3px 3px 0;
+        }
+  
+        .columnChooser-heading {
+          font-weight: 600;
+          color: #5E6C84;
+          font-size: 15px;
+          padding: 10px 10px 0;
+        }
+  
+        .buttonPanel {
+          display: flex;
+          justify-content: flex-end;
+          padding: 10px;
+          border-top: 1px solid #A5ADBA;
+        }
+  
+        .buttonPanel button {
+          min-width: auto;
+        }
+  
+        .columnChooser-submit {
+          margin-right: 10px;
+        }
+  
+        .warning {
+          color: rgb(204, 51, 0);
+        }
+  
+        .table-columns.orderId {
+          width: 40px;
+          flex: none;
+        }
+  
+        #draggableColumn .table-cell {
+          width: auto;
+        }
+  
+        .table-columns.htmlComment,
+        .table-columns.htmlComment .table-cell {
+          width: 150px;
+        }
+  
+        .testStepFocus-btn {
+          color: #0052CC;
+          cursor: pointer;
+        }
+  
+        .testStepFocus-btn img {
+          margin-left: 5px;
+        }
+  
+        .testStepFocus {
+          align-self: center;
+        }
+  
+        .bulkAction-round {
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 20px;
+          height: 20px;
+          padding: 6px;
+          background: #f7f8f9;
+          border: 1px solid #DEE1E6;
+          border-radius: 50%;
+          margin-right: 10px;
+        }
+  
+        .bulkAction-round:focus {
+          outline: none;
+        }
+  
+        .bulkAction-leftWrapper,
+        .bulkAction-rightWrapper {
+          display: flex;
+          justify-content: space-between;
+        }
+  
+        .actions-wrapper.tick-button,
+        .actions-wrapper.cross-button {
+          background-color: #4C9AFF;
+        }
+  
+        .sortIcon {
+          width: 20px;
+          height: 20px;
+          vertical-align: middle;
+          display: inline-block;
+          cursor: pointer;
+          border-radius: 0 4px 4px 0;
+          outline: none;
+          position: relative;
+        }
+  
+        .sortIcon:before {
+          content: '';
+          position: absolute;
+          width: 6px;
+          height: 2px;
+          top: 9px;
+          left: 6px;
+          transform: rotate(45deg);
+          background: #DFE1E5;
+        }
+  
+        .sortIcon:after {
+          content: '';
+          position: absolute;
+          width: 6px;
+          height: 2px;
+          top: 9px;
+          right: 5px;
+          transform: rotate(-45deg);
+          background: #DFE1E5;
+        }
+  
+        .sortIcon.ASC:before {
+          top: 7px;
+          transform: rotate(-45deg);
+          background: #4c9aff;
+        }
+  
+        .sortIcon.ASC:after {
+          top: 7px;
+          transform: rotate(45deg);
+          background: #4c9aff;
+        }
+  
+        .cell-wrapper.DESC,
+        .cell-wrapper.ASC {
+          color: #4c9aff;
+        }
+  
+        .exportListItems {
+          position: absolute;
+          display: flex;
+          flex-direction: column;
+          width: 100px;
+          z-index: 3000;
+          left: -125px;
+          padding: 10px;
+          border-radius: 5px;
+          background-color: #fff;
+          border: 1px solid #dfe1e6;
+          border-bottom-left-radius: 3px;
+          border-bottom-right-radius: 3px;
+          box-shadow: 0 3px 6px rgba(0, 0, 0, .2);
+        }
+  
+        .exportWrapper {
+          display: flex;
+          padding: 2px;
+          color: #5E6C84;
+          cursor: pointer;
+        }
+  
+        .exportWrapper:hover {
+          color: #4C9AFF;
+        }
+  
+        .exportWrapper img {
+          height: 15px;
+          width: 19px;
+          border: 0;
+          margin-top: 3px;
+          margin-right: 5px;
+        }
+  
+        .exportContainer {
+          position: relative;
+        }
+  
+        .scrollWrapper {
+          max-height: 350px;
+          overflow: auto;
+        }
+  
+        .scrollWrapper.cycleSummaryGrid,
+        .scrollWrapper.testDetailExecution,
+        .scrollWrapper.moveExecutionGrid {
+          max-height: none;
+        }
+  
+        grid-cell {
+          width: 100%;
+        }
+  
+        .permissionDenied {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+        }
+  
+        .outlineNone {
+          outline: none;
+        }
+  
+        .table-columns.TEXT .table-cell,
+        .table-columns.LARGE_TEXT .table-cell {
+          max-height: 200px;
+          overflow: auto;
+          padding-top: 1px;
+          padding-bottom: 1px;
+        }
+  
+        .table-columns.comment .table-cell {
+          width: 200px;
+        }
+  
+        #loadingIndicator {
+          height: 45px;
+          display: none;
+          justify-content: center;
+          align-items: center;
+          background-color: #F4F5F7;
+        }
+      </style>
+    </custom-style>
+    <div class="action-container grid-component">
+      <div class="bulkAction-leftWrapper">
+        <template is="dom-if" if="{{testConfig.hasBulkActions}}">
+          <div class="bulkAction-buttons">
+            <template is="dom-repeat" items="{{testConfig.bulkActions}}" as="action">
+              <div class$="bulkAction-container {{action.customEvent}}" data-eventname="{{action.customEvent}}" on-click="_bulkAction">
+                <button type="button" disabled="{{action.disabled}}">
+                  <!-- <img src="{{action.imgSrc}}">{{action.actionName}}</button> -->
+              </div>
+            </template>
+          </div>
+        </template>
+      </div>
+      <div class="bulkAction-rightWrapper">
+        <template is="dom-if" if="{{testConfig.exportTestSteps.isEnabled}}">
+          <div class="bulkAction-buttons exportContainer">
+            <div class="bulkAction-container bulkAction-round" data-customevent="{{testConfig.exportTestSteps.customEvent}}" data-eventname="{{testConfig.exportTestSteps.customEvent}}"
+              on-click="_triggerExportDropdown" on-focusout="_closeInlineDialog" tabindex="-1">
+              <!-- <img src="{{testConfig.exportTestSteps.imgSrc}}"> -->
+            </div>
+            <template is="dom-if" if="{{openExportDropDown}}">
+              <div class="exportListItems">
+                <template is="dom-repeat" items="{{testConfig.exportTestSteps.exportOptions}}" as="export">
+                  <div class="exportWrapper" data-exportid="{{export.exportId}}" data-customevent="{{testConfig.exportTestSteps.customEvent}}"
+                    data-eventname="{{testConfig.exportTestSteps.customEvent}}" on-mousedown="_triggerEvent">
+                    <!-- <img src="{{export.imgSrc}}"> -->
+                    <span>{{export.exportName}}</span>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </template>
+        <template is="dom-if" if="{{testConfig.popupTestSteps.isEnabled}}">
+          <div class="bulkAction-buttons">
+            <div title="{{testConfig.popupTestSteps.actionName}}" class="bulkAction-container bulkAction-round" data-customevent="{{testConfig.popupTestSteps.customEvent}}"
+              data-eventname="{{testConfig.popupTestSteps.customEvent}}" on-click="_triggerEvent">
+              <!-- <img src="{{testConfig.popupTestSteps.imgSrc}}"> -->
+            </div>
+          </div>
+        </template>
+  
+        <template is="dom-if" if="{{testConfig.testStepFocus.isEnabled}}">
+          <div class="bulkAction-buttons">
+            <div class="testStepFocus" data-customevent="{{testConfig.testStepFocus.customEvent}}" data-eventname="{{testConfig.testStepFocus.customEvent}}"
+              on-click="_triggerEvent">
+              <div class="testStepFocus-btn">{{testConfig.testStepFocus.actionName}}
+                <!-- <img src="{{testConfig.testStepFocus.imgSrc}}"> -->
+              </div>
+            </div>
+          </div>
+        </template>
+        <template is="dom-if" if="{{testConfig.columnchooser.isEnabled}}">
+          <div class$="bulkAction-buttons {{_checkIsGrid(isGrid)}}">
+            <div class="bulkAction-container outlineNone" data-customevent="{{testConfig.columnchooser.customEvent}}" data-eventname="{{testConfig.columnchooser.customEvent}}"
+              on-click="_showColumnChooser" tabindex="-1" on-focusout="_checkColumnChooserblur">
+              <button type="button" class="columnChooser-btn" disabled={{testConfig.columnchooser.disabled}}>{{testConfig.columnchooser.actionName}}
+                <span class="imgWrapper">
+                  <template is="dom-if" if="{{testConfig.columnchooser.imgSrc}}">
+                    <!-- <img src="{{testConfig.columnchooser.imgSrc}}"> -->
+                  </template>
+                </span>
+              </button>
+            </div>
+            <div tabindex="-1" class$="content column-chooser-cont {{_openColumnChooserDialog(showColumnChooser)}}">
+              <div class="columnChooser-heading">Column Chooser</div>
+              <div class="checkbox-wrapper content" tabindex="-1">
+                <template is="dom-repeat" items="{{columnChooserValues}}" as="column">
+                  <div class="checkbox-container">
+                    <custom-checkbox mode="edit" rowid="{{column.key}}" options="[{&quot;value&quot;:&quot;{{column.key}}&quot;,&quot;content&quot;:&quot;{{column.displayName}}&quot;,&quot;selected&quot;:{{column.isVisible}}}]"
+                      change="true" on-submitvalue="_columnChooser"></custom-checkbox>
+                  </div>
+                </template>
+                <template is="dom-if" if="{{submitDisabled}}">
+                  <div class="warning">Select Atleast One Option</div>
+                </template>
+              </div>
+              <div class="buttonPanel">
+                <button tabindex="-1" type="button" class="content columnChooser-submit" disabled="{{submitDisabled}}" on-click="_submitColumnChooser">Submit</button>
+                <button tabindex="-1" type="button" class="content columnChooser-cancel" on-click="_closeColumnChooser">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </template>
+        <template is="dom-if" if="{{testConfig.addTests.isEnabled}}">
+          <div class="bulkAction-buttons">
+            <div class="bulkAction-container" data-customevent="{{testConfig.addTests.customEvent}}" data-eventname="{{testConfig.addTests.customEvent}}"
+              on-click="_addTests">
+              <button type="button" class="addTest-btn">
+                <!-- <img src="{{testConfig.addTests.imgSrc}}">{{testConfig.addTests.actionName}}</button> -->
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+    <div class="table-container">
+      <div class$="scrollWrapper {{testConfig.gridComponentPage}}">
+        <div class$="table-wrapper {{testConfig.gridComponentPage}}">
+          <div id="draggableColumn" class="drag-cell table-columns-wrapper">
+            <template is="dom-if" if="{{testConfig.draggableRows}}">
+              <div class="table-row" data-rowid="0">
+                <div class="table-columns">
+                  <div class="table-cell">
+                  </div>
+                </div>
+              </div>
+              <template is="dom-repeat" items="{{testConfig.row}}" as="row">
+                <div class$="table-row {{row.mode}} {{selectedClass(row.id, selectedRowId)}}" data-rowid="{{row.id}}">
+                  <div class="table-columns">
+                    <div class="table-cell">
+                      <template is="dom-if" if="{{!row.editMode}}">
+                        <div class="dragItss" draggable="true" on-dragover="possibleTraget" on-drag="dragElements" on-dragstart="draggingStart" on-dragend="draggingStop"
+                          data-rowid="{{row.id}}">
+                          <!-- <img src="{{testConfig.dragImageUrl}}"> -->
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </template>
+          </div>
+          <div id="gridSelection" class="check-cell table-columns-wrapper">
+            <template is="dom-if" if="{{testConfig.rowSelection}}">
+              <div class="table-row table-headerRow" data-rowid="0">
+                <div class="table-columns">
+                  <div class="table-cell"></div>
+                </div>
+              </div>
+              <template is="dom-repeat" items="{{rowsSelection}}" as="row" initial-count="{{initialCount}}">
+                <div class$="table-row {{row.mode}} {{selectedClass(row.rowId, selectedRowId)}}" data-rowid="{{row.rowId}}">
+                  <template is="dom-if" if="{{!row.permission}}">
+                    <div class="table-columns">
+                      <div class="table-cell">
+                        <custom-checkbox mode="edit" rowid="{{row.rowId}}" options="[{&quot;value&quot;:&quot;{{row.rowId}}&quot;,&quot;content&quot;:&quot;&quot;,&quot;selected&quot;:{{row.selected}}}]"
+                          change="true" on-submitvalue="_submit"></custom-checkbox>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </template>
+          </div>
+          <div id="freezeColumns" class="freezed-cells table-columns-wrapper">
+            <div class="table-row table-headerRow" data-rowid="0">
+              <template is="dom-repeat" items="{{freezedColumns}}" as="column">
+                <div class$="table-columns {{conditionalClass(column.isVisible)}} {{column.key}} {{column.type}}">
+                  <div class="table-cell">
+                    <div class$="cell-wrapper {{column.sortOrder}}" data-columnid="{{column.key}}">
+                      <template is="dom-if" if="{{testConfig.freezeToggle}}">
+                        <span class="toggle-freezer-image-container">
+                          <span class="selected freeze-toggle" on-click="_toggleFreeze" title={{testConfig.unfreezeTooltip}}>
+                            <!-- <img src="{{testConfig.unfreezedImageUrl}}"> -->
+                          </span>
+                        </span>
+                      </template>
+                      <span class="column-header" title="{{column.displayName}}">{{column.displayName}}</span>
+                      <template is="dom-if" if="{{column.isSortable}}">
+                        <span class="" on-click="_sortGrid" data-sortorder="{{column.sortOrder}}" data-columnkey="{{column.key}}">
+                          <span class$="sortIcon {{column.sortOrder}}" tabindex="-1"></span>
+                        </span>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+  
+            <template is="dom-repeat" items="{{testConfig.row}}" as="row" index-as="indexRow" initial-count="{{initialCount}}">
+              <div class$="table-row {{row.mode}} {{selectedClass(row.id, selectedRowId)}}" data-rowid="{{row.id}}" on-dblclick="_rowSelectDbl"
+                on-click="_rowSelect">
+                <template is="dom-if" if="{{!row.permission}}">
+                  <template is="dom-repeat" items="{{freezedColumns}}" as="column" index-as="indexColumn">
+                    <div class$="table-columns {{conditionalClass(column.isVisible)}} {{column.key}} {{column.type}}  {{_isWorkflowExecutionStatusCompleted(column.key,row)}}">
+                      <div class="table-cell" on-dragover="possibleTraget">
+                        <grid-cell ispopup="{{isPopup}}" rowindex="{{indexRow}}" datarow="{{row}}" datacolumn="{{column}}" setfocus="{{setFocus}}"
+                          mode="{{row.editMode}}" on-adjustrowheight="_adjustRowHeight" on-submitcell="_submitCell" on-savecellvalue="_saveCellValue"
+                          on-datepicker="_datePicker" on-defecthover="_defectHover" on-attachmentpreview="_attachemntPreview"
+                          on-fetchdefect="_fetchdefect" updaterowheight="{{updateRowHeight(indexColumn, 'freezedColumns')}}"></grid-cell>
+                      </div>
+                    </div>
+                  </template>
+                </template>
+              </div>
+            </template>
+          </div>
+          <div id="unfreezeColumns" class="unfreezed-cells table-columns-wrapper">
+            <div class="table-row table-headerRow" data-rowid="0">
+              <template is="dom-repeat" items="{{unfreezedColumns}}" as="column">
+                <div class$="table-columns {{conditionalClass(column.isVisible)}} {{column.key}} {{column.type}}">
+                  <div class="table-cell">
+                    <div class$="cell-wrapper {{column.sortOrder}}" data-columnid="{{column.key}}">
+                      <template is="dom-if" if="{{testConfig.freezeToggle}}">
+                        <template is="dom-if" if="{{canFreeze}}">
+                          <span class="freeze-toggle" on-click="_toggleFreeze" title={{testConfig.freezeTooltip}}>
+                            <!-- <img src="{{testConfig.freezeImageUrl}}"> -->
+                          </span>
+                        </template>
+                      </template>
+                      <span class="column-header" title="{{column.displayName}}">{{column.displayName}}</span>
+                      <template is="dom-if" if="{{column.isSortable}}">
+                        <span class="" on-click="_sortGrid" data-sortorder="{{column.sortOrder}}" data-columnkey="{{column.key}}">
+                          <span class$="sortIcon {{column.sortOrder}}" tabindex="-1"></span>
+                        </span>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+  
+            <template is="dom-repeat" items="{{testConfig.row}}" as="row" index-as="indexRow" initial-count="{{initialCount}}">
+              <div class$="table-row {{row.mode}} {{selectedClass(row.id, selectedRowId)}}" data-rowid="{{row.id}}" on-dblclick="_rowSelectDbl"
+                on-click="_rowSelect">
+                <template is="dom-if" if="{{row.permission}}">
+                  <div class="permissionDenied">
+                    No Permission on Test/Issue (XXXXX)
+                  </div>
+                </template>
+                <template is="dom-if" if="{{!row.permission}}">
+                  <template is="dom-repeat" items="{{unfreezedColumns}}" as="column" index-as="indexColumn">
+                    <div class$="table-columns {{conditionalClass(column.isVisible)}} {{column.key}} {{column.type}} {{_isWorkflowExecutionStatusCompleted(column.key,row)}}">
+                      <div class="table-cell" on-dragover="possibleTraget">
+                        <grid-cell ispopup="{{isPopup}}" rowindex="{{indexRow}}" datarow="{{row}}" datacolumn="{{column}}" setfocus="{{setFocus}}"
+                          mode="{{row.editMode}}" on-adjustrowheight="_adjustRowHeight" on-submitcell="_submitCell" on-savecellvalue="_saveCellValue"
+                          on-datepicker="_datePicker" on-defecthover="_defectHover" on-attachmentpreview="_attachemntPreview"
+                          on-fetchdefect="_fetchdefect" updaterowheight="{{updateRowHeight(indexColumn, 'unfreezedColumns')}}"></grid-cell>
+                      </div>
+                    </div>
+                  </template>
+                </template>
+              </div>
+            </template>
+          </div>
+          <div id="gridActions" class$="action-cell table-columns-wrapper {{testConfig.gridComponentPage}}">
+            <div class="table-row action-row table-headerRow" data-rowid="0">
+              <div class="table-columns">
+                <div class="table-cell">
+                  <div class="cell-wrapper">
+                    <span>Actions</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <template is="dom-repeat" items="{{testConfig.row}}" as="row" initial-count="{{initialCount}}">
+              <div class$="table-row action-row {{row.mode}} {{selectedClass(row.id, selectedRowId)}}" data-rowid="{{row.id}}">
+                <template is="dom-if" if="{{!row.permission}}">
+                  <div class="table-columns">
+                    <template is="dom-if" if="{{!row.editMode}}">
+                      <template is="dom-repeat" items="{{testConfig.actions}}" as="action">
+                        <div class="table-cell">
+                          <div class="cell-wrapper">
+                            <div class="actions-wrapper" data-customevent="{{action.customEvent}}" data-eventname="{{action.actionName}}" data-rowid="{{row.id}}"
+                              on-click="_triggerEvent" title="{{action.actionName}}">
+                              <!-- <img src="{{action.imgSrc}}"> -->
+                            </div>
+                          </div>
+                        </div>
+                      </template>
+                    </template>
+                    <template is="dom-if" if="{{row.editMode}}">
+                      <div class="table-cell">
+                        <div class="cell-wrapper">
+                          <div tabindex="100" class="actions-wrapper tick-button" data-customevent="{{testConfig.addTestSteps.customEvent}}" data-eventname="{{testConfig.addTestSteps.actionName}}"
+                            data-rowid="{{row.id}}" on-click="_triggerEvent">
+                            <!-- <img src="{{testConfig.addTestSteps.imgSrc}}"> -->
+                          </div>
+                        </div>
+                      </div>
+                      <div class="table-cell">
+                        <div class="cell-wrapper">
+                          <div tabindex="100" class="actions-wrapper cross-button" data-customevent="{{testConfig.removeTestSteps.customEvent}}" data-eventname="{{testConfig.removeTestSteps.actionName}}"
+                            data-rowid="{{row.id}}" on-click="_triggerEvent">
+                            <!-- <img src="{{testConfig.removeTestSteps.imgSrc}}"> -->
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="loadingIndicator">
+      <span>Loading...</span>
+    </div>
+  </template>
+
+  <script>
+    class GridComponent extends Polymer.Element {
+      static get is() { return "grid-component"; }
+      constructor() {
+        super();
+        this.testConfig = {};
+        this.freezedColumns = [];
+        this.unfreezedColumns = [];
+        this.rowsHeights = [];
+        this.draggableRowHeight;
+        this.dragDirection;
+        this.selectedRowId = '';
+        this.selectedCells = [];
+        this.rowsSelection = [];
+        this.saveRowValues = {};
+        this.draggedOver;
+        this.prevPosition;
+        this.maxFreezed = 2;
+        this.canFreeze = false;
+        this.isGrid = true;
+        this.showColumnChooser = false;
+        this.submitDisabled = false;
+        this.columnChooserValues = [];
+        this.openExportDropDown = false;
+        this.setFocus = false;
+        this.columnChooserArr = [];
+        this.selectAll = false;
+        this.initialCount = 10;
+        this.columnChooserTrigger = '';
+      }
+
+      static get properties() {
+        return {
+          config: {
+            type: String,
+            value: '{}',
+            observer: '_configUpdate'
+          },
+          updatedconfig: {
+            type: String,
+            observer: '_gridValueChanged',
+          }
+        }
+      };
+
+      draggingStart(ev) {
+        var event = ev.currentTarget;
+        var rowId = event.dataRowid;
+        this.selectedCells = [];
+        var that = this;
+        this.draggableRowHeight = event.clientHeight + 10;
+        this.shadowRoot.querySelectorAll('.table-row').forEach(function (row) {
+          if (row.dataRowid === rowId) {
+            that.selectedCells.push(row);
+            $(row).addClass('selected');
+            $(row).after('<div class="draggable table-row" style="height:' + that.draggableRowHeight + 'px' + '"></div>');
+          } else {
+            $(row).removeClass('selected');
+          }
+        });
+        this.shadowRoot.querySelectorAll('.draggable.table-row').forEach(function (row) {
+          row.addEventListener('dragover', that.possibleTraget);
+        });
+      }
+
+      possibleTraget(ev) {
+        var event = ev.currentTarget;
+        if (event.className.indexOf('draggable') >= 0) {
+          this.draggedOver = event;
+        } else {
+          var rowId = event.dataRowid;
+          var parent = $(event).parents('.table-row');
+          var index = parent.index();
+
+          if (index - 1 !== this.testConfig.row.length) {
+            this.shadowRoot.querySelectorAll('.draggable.table-row').forEach(function (row) {
+              row.parentElement.removeChild(row);
+            });
+
+            index = parent.index();
+
+            var freezedColumnRow = $(this.$.freezeColumns).find('.table-row')[index];
+            var unfreezedColumnRow = $(this.$.unfreezeColumns).find('.table-row')[index];
+            var actionColumnRow = $(this.$.gridActions).find('.table-row')[index];
+            var draggableColumnRow = $(this.$.draggableColumn).find('.table-row')[index];
+            var gridSelectionRow = $(this.$.gridSelection).find('.table-row')[index];
+
+            if (this.dragDirection) {
+              $(freezedColumnRow).after('<div class="draggable table-row" style="height:' + this.draggableRowHeight + 'px' + '"></div>');
+              $(unfreezedColumnRow).after('<div class="draggable table-row" style="height:' + this.draggableRowHeight + 'px' + '"></div>');
+              $(actionColumnRow).after('<div class="draggable table-row"  style="height:' + this.draggableRowHeight + 'px' + '"></div>');
+              $(draggableColumnRow).after('<div class="draggable table-row" style="height:' + this.draggableRowHeight + 'px' + '"></div>');
+              $(gridSelectionRow).after('<div class="draggable table-row" style="height:' + this.draggableRowHeight + 'px' + '"></div>');
+            } else {
+              $(freezedColumnRow).before('<div class="draggable table-row"  style="height:' + this.draggableRowHeight + 'px' + '"></div>');
+              $(unfreezedColumnRow).before('<div class="draggable table-row"  style="height:' + this.draggableRowHeight + 'px' + '"></div>');
+              $(actionColumnRow).before('<div class="draggable table-row" style="height:' + this.draggableRowHeight + 'px' + '"></div>');
+              $(draggableColumnRow).before('<div class="draggable table-row" style="height:' + this.draggableRowHeight + 'px' + '"></div>');
+              $(gridSelectionRow).before('<div class="draggable table-row" style="height:' + this.draggableRowHeight + 'px' + '"></div>');
+            }
+
+            var that = this;
+            this.shadowRoot.querySelectorAll('.draggable.table-row').forEach(function (row) {
+              // row.addEventListener('drop', that.mayDay);
+              row.addEventListener('dragover', that.possibleTraget);
+            });
+          }
+        }
+      }
+
+      dragElements(ev) {
+        var event = ev;
+        var rowId = event.currentTarget.dataRowid;
+        var top = event.clientY - $(this.shadowRoot.querySelectorAll('.table-wrapper'))[0].getBoundingClientRect().top - 18;
+        if (event.screenY !== 0 && event.screenX !== 0) {
+          this.selectedCells.map(function (row) {
+            var p = $(row).position();
+            var offset = top;
+            $(row).css({ 'top': offset, "position": "absolute", "z-index": "3000", "left": 'auto', "pointer-events": " none", "width": $(row)[0].clientWidth });
+          });
+        }
+        if (this.prevPosition) {
+          if (this.prevPosition - event.clientY > 0) {
+            this.dragDirection = 0;
+          } else {
+            this.dragDirection = 1;
+          }
+        }
+        this.prevPosition = event.clientY;
+        var scrollParent = $(this.shadowRoot.querySelector('.scrollWrapper'));
+
+        if (scrollParent[0].clientHeight + scrollParent[0].scrollTop < event.clientY - (scrollParent.offset().top - scrollParent[0].scrollTop)) {
+          if (scrollParent[0].scrollTop >= scrollParent[0].scrollHeight - scrollParent[0].clientHeight) scrollParent.scrollTop(scrollParent[0].scrollHeight - scrollParent[0].clientHeight); else scrollParent.scrollTop(event.clientY - (scrollParent.offset().top - scrollParent[0].scrollTop) - scrollParent[0].clientHeight);
+        } else if (scrollParent[0].scrollTop > event.clientY - (scrollParent.offset().top - scrollParent[0].scrollTop)) {
+          scrollParent.scrollTop(event.clientY - (scrollParent.offset().top - scrollParent[0].scrollTop));
+        }
+      }
+
+      draggingStop(ev) {
+       var that = this;
+        var rowId = void 0;
+        var selectedRowIndex = $(this.$.gridActions).find('.selected.table-row').index();
+
+        this.selectedCells.map(function (row) {
+          var p = $(row).position();
+          var left = p.left;
+          rowId = row.dataRowid;
+          // $(row).removeClass('selected');
+          // if($(row).parents('#freezeColumns').length) {
+          //   $(that.$.freezeColumns).find('.draggable.table-row').after(row);
+          // } else if($(row).parents('#unfreezeColumns').length) {
+          //   $(that.$.unfreezeColumns).find('.draggable.table-row').after(row);
+          // } else if($(row).parents('#gridActions').length) {
+          //   $(that.$.gridActions).find('.draggable.table-row').after(row);
+          // } else if($(row).parents('#draggableColumn').length) {
+          //   $(that.$.draggableColumn).find('.draggable.table-row').after(row);
+          // } else if($(row).parents('#gridSelection').length) {
+          //   $(that.$.gridSelection).find('.draggable.table-row').after(row);
+          // }
+          $(row).css({ 'width': 'auto', 'top': "auto", "position": "static", "z-index": "1", "left": "auto", "pointer-events": "auto" });
+        });
+
+        var selectedRow = $(this.$.gridActions).find('.draggable.table-row');
+        var index = selectedRow.index();
+        var afterRowId;
+        afterRowId = $(this.$.draggableColumn).find('.table-row')[index + 1].dataRowid;
+
+        var position;
+        if (index === this.testConfig.row.length || afterRowId === -1) {
+          position = 'First';
+        } else {
+          position = afterRowId;
+        }
+
+        $(this.$.gridActions).find('.draggable.table-row').each(function (index) {
+          var freezedColumnRow = $(that.$.freezeColumns).find('.draggable.table-row').remove();
+          var unfreezedColumnRow = $(that.$.unfreezeColumns).find('.draggable.table-row').remove();
+          var actionColumnRow = $(that.$.gridActions).find('.draggable.table-row').remove();
+          var draggableColumnRow = $(that.$.draggableColumn).find('.draggable.table-row').remove();
+          var gridSelectionRow = $(that.$.gridSelection).find('.draggable.table-row').remove();
+        });
+
+        var obj = {
+          position: position,
+          id: rowId,
+          customEvent: 'movestep'
+        };
+        this.selectedRowId = rowId;
+        this.dispatchEvent(new CustomEvent('gridActions', { detail: obj, bubbles: true, composed: true }));
+      }
+
+      _defectHover(ev) {
+        ev.stopImmediatePropagation();
+        this.dispatchEvent(new CustomEvent('defecthover', { detail: ev.detail, bubbles: true, composed: true }));
+      }
+
+      selectedClass(id1, id2) {
+        return (this.testConfig.highlightSelectedRows ? (id1 === id2 ? 'selected' : '') : '')
+      }
+
+      updateRowHeight(index, obj) {
+        return (this[obj].length - 1 == index ? 'true' : 'false');
+      }
+
+      _configUpdate() {
+        var dummyConfig = JSON.parse(this.config);
+        var that = this;
+
+        if (this.testConfig.head && !(dummyConfig.hasOwnProperty('freezeColumns') && (dummyConfig.freezeColumns !== this.testConfig.freezeColumns))) {
+          dummyConfig.head.map(function (dummy) {
+            that.testConfig.head.map(function (config) {
+              if (dummy.key === config.key) {
+                dummy.isFreeze = config.isFreeze;
+              }
+            });
+          })
+        }
+        this.testConfig = dummyConfig;
+        if (this.testConfig.isPopup) {
+          this.isPopup = 'true';
+        } else {
+          this.isPopup = 'false';
+        }
+
+        this.initialCount = this.testConfig.initialCount;
+        if (this.testConfig.selectedRowId) {
+          this.selectedRowId = this.testConfig.selectedRowId;
+        }
+
+        if (Object.keys(this.testConfig).length) {
+          this._createGrid();
+
+          this.rowsSelection = [];
+          if (this.testConfig.resetSelectAll) {
+            this.selectAll = false;
+          }
+          var allSelected = true;
+          this.testConfig.row.map(function (row) {
+            if (that.testConfig.hasOwnProperty("checkedRowId")) {
+              if (that.testConfig.checkedRowId.indexOf(row.id) >= 0) {
+                that.rowsSelection.push({ rowId: row.id, selected: true, permission: row.permission });
+              } else {
+                that.rowsSelection.push({ rowId: row.id, selected: false, permission: row.permission });
+                allSelected = false;
+              }
+            } else {
+              that.rowsSelection.push({ rowId: row.id, selected: false, permission: row.permission });
+              allSelected = false;
+            }
+          });
+          if (allSelected) {
+            setTimeout(function () {
+              var trigger = $(that.shadowRoot.querySelector('.bulkAction-container.selectRows'))[0];
+
+              that.testConfig.bulkActions.map(function (action, index) {
+                var path = 'testConfig.bulkActions.' + index.toString(),
+                  imgSrcChecked = action.imgSrcChecked,
+                  imgSrcUnchecked = action.imgSrc;
+                if (action.customEvent == 'selectRows') {
+                  that.set(path, { actionName: action.actionName, customEvent: action.customEvent, disabled: action.disabled, imgSrc: imgSrcChecked, imgSrcChecked: imgSrcUnchecked });
+                  (!trigger.classList.contains('allSelected')) && trigger.classList.add('allSelected');
+                }
+              });
+            }, 0);
+          }
+        }
+      }
+
+      _createGrid() {
+        var that = this;
+        var count = 0;
+        var rowsCount = that.testConfig.row.length;
+
+        if (this.testConfig.updateSaveValues) {
+          this.saveRowValues = {};
+        } else if (this.testConfig.row[rowsCount - 1] && this.testConfig.row[rowsCount - 1].editMode) {
+          this.testConfig.head.map(function (column) {
+            if ((column.type === 'DATE' || column.type === 'DATE_TIME') && that.testConfig.row[rowsCount - 1][column.key] !== '') {
+              if (that.saveRowValues[that.testConfig.row[rowsCount - 1].id]) {
+                that.saveRowValues[that.testConfig.row[rowsCount - 1].id][column.key] = {
+                  selectedOptions: '',
+                  value: that.testConfig.row[rowsCount - 1][column.key]
+                };
+              } else {
+                that.saveRowValues[that.testConfig.row[rowsCount - 1].id] = {};
+                that.saveRowValues[that.testConfig.row[rowsCount - 1].id][column.key] = {
+                  selectedOptions: '',
+                  value: that.testConfig.row[rowsCount - 1][column.key]
+                };
+              }
+            }
+          });
+        }
+
+        this.columnChooserValues = [];
+        this.freezedColumns = this.testConfig.head.filter(cell => {
+          if (cell.key !== "issueKey" && cell.key !== "orderId") {
+            this.columnChooserValues.push({ key: cell.key, displayName: cell.displayName, isVisible: cell.isVisible });
+          }
+          that.columnChooserArr = JSON.parse(JSON.stringify(that.columnChooserValues));
+          if (cell.isFreeze) {
+            count++;
+            if (count > this.maxFreezed) {
+              return !cell.isFreeze
+            }
+          }
+          return cell.isFreeze;
+        });
+        if (this.freezedColumns.length < this.maxFreezed) {
+          this.canFreeze = true;
+        } else {
+          this.canFreeze = false;
+        }
+        this.unfreezedColumns = this.testConfig.head.filter(cell => {
+          return (that.freezedColumns.indexOf(cell) === -1)
+        });
+      }
+
+      _adjustRowHeight(ev) {
+        var index = ev.detail.index + 1;
+        if (ev.detail.loader && this.testConfig.showLoader && index === 1) {
+          this.$.loadingIndicator.style.display = 'flex';
+        }
+        var that = this;
+        var gridActions = $(that.$.gridActions).find('.table-row')[index];
+        var freezedColumnRow = $(that.$.freezeColumns).find('.table-row')[index];
+        var unfreezedColumnRow = $(that.$.unfreezeColumns).find('.table-row')[index];
+        var gridSelectionRow = $(that.$.gridSelection).find('.table-row')[index];
+        var draggableColumnRow = $(that.$.draggableColumn).find('.table-row')[index];
+
+        gridActions && (gridActions.style.height = "auto");
+        freezedColumnRow && (freezedColumnRow.style.height = "auto");
+        unfreezedColumnRow && (unfreezedColumnRow.style.height = "auto");
+        draggableColumnRow && (draggableColumnRow.style.height = "auto");
+        gridSelectionRow && (gridSelectionRow.style.height = "auto");
+        var height = 45;
+
+        if (freezedColumnRow && (height < freezedColumnRow.clientHeight)) {
+          height = freezedColumnRow.clientHeight;
+        }
+        if (unfreezedColumnRow && (height < unfreezedColumnRow.clientHeight)) {
+          height = unfreezedColumnRow.clientHeight;
+        }
+
+        gridActions && (gridActions.style.height = height + 'px');
+        freezedColumnRow && (freezedColumnRow.style.height = height + 'px');
+        unfreezedColumnRow && (unfreezedColumnRow.style.height = height + 'px');
+        draggableColumnRow && (draggableColumnRow.style.height = height + 'px');
+        gridSelectionRow && (gridSelectionRow.style.height = height + 'px');
+
+        if (ev.detail.loader && this.testConfig.showLoader && (index === this.testConfig.row.length - 1 || index === this.testConfig.row.length)) {
+          this.$.loadingIndicator.style.display = 'none';
+        }
+      }
+
+      conditionalClass(isVisible) {
+        if (!isVisible) {
+          return 'hide';
+        } else {
+          return '';
+        }
+      }
+
+      _handleTap(e) {
+        var targetObj = JSON.parse(e.target.dataset.foo);
+        var testConfig_clone = this.testConfig;
+        for (var i = 0; i < testConfig_clone.head.length; i++) {
+          if (targetObj.key == testConfig_clone.head[i].key) {
+            testConfig_clone.head[i].isVisible = e.target.checked;
+            break;
+          }
+        }
+        let that = this;
+        this.freezedColumns.map(function (column, index) {
+          var path = 'freezeColumns.' + index.toString();
+          if (column.key === targetObj.key) {
+            column['isVisible'] = e.target.checked;
+            that.set(path, column);
+          }
+        });
+
+        this.unfreezedColumns.map(function (column, index) {
+          var path = 'unfreezedColumns.' + index.toString();
+          if (column.key === targetObj.key) {
+            column['isVisible'] = e.target.checked;
+            that.set(path, column);
+          }
+        });
+
+        // this.set('testConfig.head[' +i+ '].isVisible', testConfig_clone.head[i].isVisible);
+        this.set('testConfig.head.' + i + '.isVisible', testConfig_clone.head[i].isVisible);
+        // console.log(this.get('testConfig.head.' +i+ '.isVisible'));
+        // this._createGrid();
+        // for(var i=0; i<this.testConfig.head.length; i++){
+        //   if(targetObj.key == this.testConfig.head[i].key){
+        //     this.setProperties('testConfig.head['+i+'].isVisible', {'isVisible':  e.target.checked});
+        //     break;
+        //   }
+        // }
+      }
+
+      _toggleFreeze(e) {
+        var columnId = $(e.currentTarget).parents('.cell-wrapper')[0].dataColumnid;
+        var element = $(e.currentTarget);
+        if (element.hasClass('selected')) {
+          element.removeClass('selected');
+          this.testConfig.head.map(function (cell) {
+            if (cell.key === columnId)
+              cell.isFreeze = false;
+          });
+        } else {
+          element.addClass('selected');
+          this.testConfig.head.map(function (cell) {
+            if (cell.key === columnId)
+              cell.isFreeze = true;
+          });
+        }
+        this._createGrid();
+        this.dispatchEvent(new CustomEvent('freezetoggle', { detail: { testConfig: this.testConfig }, bubbles: true, composed: true }));
+      }
+
+      _triggerExportDropdown(ev) {
+        this.openExportDropDown = !this.openExportDropDown;
+      }
+
+      _closeInlineDialog() {
+        this.openExportDropDown = false;
+      }
+
+      _triggerEvent(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        var element = $(ev.currentTarget)[0];
+        var selectedRow = {};
+        this.testConfig.row.map(function (row) {
+          if (row.id === element.dataRowid) {
+            selectedRow = row;
+          }
+        })
+        if (element.dataCustomevent === 'largeview') {
+          var obj = {
+            actionName: element.dataEventname,
+            customEvent: element.dataCustomevent,
+          }
+          this.dispatchEvent(new CustomEvent('gridActions', { detail: obj, bubbles: true, composed: true }));
+        }
+        else if (element.dataCustomevent === 'exportvalue') {
+          var obj = {
+            exportId: element.dataExportid,
+            actionName: element.dataEventname,
+            customEvent: element.dataCustomevent,
+          }
+          this.dispatchEvent(new CustomEvent('gridActions', { detail: obj, bubbles: true, composed: true }));
+          this.openExportDropDown = false;
+        }
+        else if (element.dataCustomevent === 'scrollDown') {
+          var obj = {
+            actionName: element.dataEventname,
+            customEvent: element.dataCustomevent,
+          }
+          this.dispatchEvent(new CustomEvent('gridActions', { detail: obj, bubbles: true, composed: true }));
+          this.setFocus = !this.setFocus;
+        } else if (element.dataCustomevent === 'clearvalue') {
+          var obj = {
+            currentConfig: this.testConfig,
+            actionName: element.dataEventname,
+            customEvent: element.dataCustomevent,
+          }
+          this.dispatchEvent(new CustomEvent('gridActions', { detail: obj, bubbles: true, composed: true }));
+        } else if (element.dataCustomevent === 'addstep') {
+          var obj = {
+            columnsValues: this.saveRowValues,
+            actionName: element.dataEventname,
+            customEvent: element.dataCustomevent,
+          }
+          this.dispatchEvent(new CustomEvent('gridActions', { detail: obj, bubbles: true, composed: true }));
+        } else {
+          var obj = {
+            rowDetail: selectedRow,
+            actionName: element.dataEventname,
+            customEvent: element.dataCustomevent,
+          }
+          this.dispatchEvent(new CustomEvent('gridActions', { detail: obj, bubbles: true, composed: true }));
+        }
+      }
+
+      _attachemntPreview(ev) {
+        var obj = {
+          attachmentArray: ev.detail.attachmentArray,
+          selectedAttachment: ev.detail.fileId,
+          actionName: 'viewImage',
+          customEvent: 'viewImage',
+        }
+        this.dispatchEvent(new CustomEvent('gridActions', { detail: obj, bubbles: true, composed: true }));
+      }
+
+      _checkColumnChooserblur(ev) {
+        if (ev.relatedTarget && (ev.relatedTarget.localName === 'custom-checkbox' || ev.relatedTarget.className.indexOf('content') >= 0)) {
+          this.showColumnChooser = true;
+        } else {
+          this.columnChooserValues = JSON.parse(JSON.stringify(this.columnChooserArr));
+          this.showColumnChooser = false;
+        }
+      }
+
+      _showColumnChooser(ev) {
+        if (!this.testConfig.columnchooser.disabled) {
+          this.showColumnChooser = !this.showColumnChooser;
+          this.columnChooserTrigger = ev.currentTarget;
+          if (this.isGrid) {
+            var triggerElement = ev.currentTarget.getBoundingClientRect();
+            var viewportHeight = window.innerHeight;
+            var height = this.shadowRoot.querySelector('.column-chooser-cont').clientHeight;
+            var topHeight = triggerElement.top;
+            if (viewportHeight > topHeight + height) $(this.shadowRoot.querySelector('.column-chooser-cont')).css({ 'top': topHeight + triggerElement.height + 5, 'left': triggerElement.left - 222 + triggerElement.width }); else {
+              $(this.shadowRoot.querySelector('.column-chooser-cont')).css({ 'top': topHeight + triggerElement.height - height, 'left': triggerElement.left - 222 });
+            }
+          }
+          // this.columnChooserTrigger.focus();
+        }
+      }
+
+      _checkIsGrid(bool) {
+        return bool ? "isGrid" : "isStandAlone";
+      }
+
+      _isWorkflowExecutionStatusCompleted(columnKey, row) {
+        return row.executionWorkflowStatus == 'COMPLETED' && columnKey == 'status' ? 'disabled' : ''
+      }
+
+      _openColumnChooserDialog(bool) {
+        return bool ? "open" : "close";
+      }
+
+      _datePicker(ev) {
+        ev.detail['columnsValues'] = this.saveRowValues[ev.detail.rowId];
+        this.dispatchEvent(new CustomEvent('gridActions', { detail: ev.detail, bubbles: true, composed: true }));
+      }
+
+      _submitCell(ev) {
+        var obj = {};
+        if (ev.detail.key === 'addAttachment') {
+          var obj = {
+            rowDetail: ev.detail.rowId,
+            actionName: 'addAttachment',
+            customEvent: 'addAttachment'
+          };
+          this.dispatchEvent(new CustomEvent('gridActions', { detail: obj, bubbles: true, composed: true }));
+        } else if (ev.detail.key === 'deleteAttachment') {
+          var obj = {
+            rowDetail: ev.detail.value,
+            actionName: 'deleteAttachment',
+            customEvent: 'deleteAttachment'
+          };
+          this.dispatchEvent(new CustomEvent('gridActions', { detail: obj, bubbles: true, composed: true }));
+        } else if (ev.detail.key === 'createDefect') {
+          var obj = {
+            rowDetail: ev.detail.rowId,
+            actionName: 'createDefect',
+            customEvent: 'createDefect'
+          };
+          this.dispatchEvent(new CustomEvent('gridActions', { detail: obj, bubbles: true, composed: true }));
+        } else if (ev.detail.key === 'defectPicker') {
+          var obj = {
+            rowDetail: ev.detail.rowId,
+            actionName: 'defectPicker',
+            customEvent: 'defectPicker'
+          };
+          this.dispatchEvent(new CustomEvent('gridActions', { detail: obj, bubbles: true, composed: true }));
+        } else if (ev.detail.key === 'stepDefect') {
+          obj[ev.detail.cellKey] = ev.detail.value;
+          this.dispatchEvent(new CustomEvent('gridValueUpdated', { detail: { wasAlreadyAdded: ev.detail.wasAlreadyAdded, updatedValue: obj, rowId: ev.detail.rowId, testConfig: this.testConfig }, bubbles: true, composed: true }));
+        } else {
+          obj[ev.detail.cellKey] = {
+            selectedOptions: ev.detail.contentValue,
+            value: ev.detail.value
+          };
+          this.dispatchEvent(new CustomEvent('gridValueUpdated', { detail: { isObject: true, updatedValue: obj, rowId: ev.detail.rowId, testConfig: this.testConfig }, bubbles: true, composed: true }));
+        }
+      }
+
+      _saveCellValue(ev) {
+        if (this.saveRowValues[ev.detail.rowId]) {
+          this.saveRowValues[ev.detail.rowId][ev.detail.cellKey] = {
+            selectedOptions: ev.detail.contentValue,
+            value: ev.detail.value
+          };
+        } else {
+          this.saveRowValues[ev.detail.rowId] = {};
+          this.saveRowValues[ev.detail.rowId][ev.detail.cellKey] = {
+            selectedOptions: ev.detail.contentValue,
+            value: ev.detail.value
+          };
+        }
+      }
+
+      _rowSelect(ev) {
+        this.selectedRowId = ev.currentTarget.dataRowid;
+        var rowId = ev.currentTarget.dataRowid;
+        var that = this;
+        this.dispatchEvent(new CustomEvent('gridRowSelected', { detail: { rowId: rowId }, bubbles: true, composed: true }));
+      }
+
+      _rowSelectDbl(ev) {
+        var rowId = ev.currentTarget.dataRowid;
+        var that = this;
+        that.shadowRoot.querySelectorAll('.table-row').forEach(function (row) {
+          if (row.dataRowid === rowId) {
+            $(row).addClass('selected');
+          } else {
+            $(row).removeClass('selected');
+          }
+        });
+        this.dispatchEvent(new CustomEvent('gridRowSelected', { detail: { rowId: rowId, dblClick: true }, bubbles: true, composed: true }))
+      }
+
+      _submit(ev) {
+       var value = '';
+        var rowId = ev.detail.rowId;
+        if (ev.detail.type === 'checkbox') {
+          var valueContent = ev.detail.value;
+          value = valueContent.toString();
+        }
+        var that = this;
+        var length = 0;
+        this.rowsSelection.map(function (row, index) {
+          var path = 'rowsSelection.' + index.toString();
+          if (row.rowId === rowId) {
+            if (value) {
+              that.set(path, { rowId: row.rowId, selected: true, permission: row.permission });
+            } else {
+              that.set(path, { rowId: row.rowId, selected: false, permission: row.permission });
+            }
+          }
+        });
+        var trigger = $(this.shadowRoot.querySelector('.bulkAction-container.selectRows'))[0];
+
+        var counter = 0;
+        this.rowsSelection.map(function (row) {
+          if (that.testConfig.checkedRowId.indexOf(row.rowId) >= 0) {
+            var rowIndex = that.testConfig.checkedRowId.indexOf(row.rowId);
+            that.testConfig.checkedRowId.splice(rowIndex, 1);
+          }
+          if (row.selected === true && !row.permission) {
+            counter++;
+          }
+          if (!row.permission) {
+            length++;
+          }
+        });
+        this.testConfig.bulkActions.map(function (action, index) {
+          var path = 'testConfig.bulkActions.' + index.toString(),
+            imgSrcChecked = action.imgSrcChecked,
+            imgSrcUnchecked = action.imgSrc;
+          if (action.customEvent == 'selectRows') {
+            if (counter === length) {
+              that.set(path, { actionName: action.actionName, customEvent: action.customEvent, disabled: action.disabled, imgSrc: imgSrcChecked, imgSrcChecked: imgSrcUnchecked });
+              (!trigger.classList.contains('allSelected')) && trigger.classList.add('allSelected');
+            }
+            else if (trigger.classList.contains('allSelected')) {
+              that.set(path, { actionName: action.actionName, customEvent: action.customEvent, disabled: action.disabled, imgSrc: imgSrcChecked, imgSrcChecked: imgSrcUnchecked });
+              trigger.classList.remove('allSelected');
+            }
+          } else {
+            if (counter > 0 && index > 0)
+              that.set(path, { actionName: action.actionName, customEvent: action.customEvent, disabled: false, imgSrc: imgSrcChecked, imgSrcChecked: imgSrcUnchecked });
+            else if (index > 0) {
+              var disabled = true;
+
+              if (action.customEvent === 'bulkDelete' && (that.testConfig.checkedRowId && that.testConfig.checkedRowId.length)) {
+                disabled = false;
+              }
+              that.set(path, { actionName: action.actionName, customEvent: action.customEvent, disabled: disabled, imgSrc: imgSrcChecked, imgSrcChecked: imgSrcUnchecked });
+            }
+          }
+        });
+        var selectedRow = [];
+        this.get('rowsSelection').map(function (row) {
+          if (row.selected) selectedRow.push(row.rowId);
+        });
+        var obj = {
+          rowsSelection: selectedRow,
+          actionName: 'rowSelection',
+          customEvent: 'selectRows',
+          rowData: this.get('rowsSelection')
+        };
+        this.dispatchEvent(new CustomEvent('gridBulkActions', { detail: obj, bubbles: true, composed: true }));
+      }
+
+      _columnChooser(ev) {
+       var value = '';
+        var valueContent = ev.detail.value;
+        value = valueContent.toString();
+        var that = this;
+        this.columnChooserValues.map(function (columns, index) {
+          var path = 'columnChooserValues.' + index.toString();
+          if (columns.key === ev.detail.rowId) {
+            if (value) {
+              that.set(path, { key: columns.key, isVisible: true, displayName: columns.displayName });
+            } else {
+              that.set(path, { key: columns.key, isVisible: false, displayName: columns.displayName });
+            }
+          }
+        });
+        var counter = 0;
+        this.columnChooserValues.map(function (column) {
+          if (column.isVisible === true) {
+            counter++;
+          }
+        });
+
+        if (counter === 0) {
+          this.submitDisabled = true;
+        } else {
+          this.submitDisabled = false;
+        }
+        this.columnChooserTrigger.focus();
+      }
+
+      _submitColumnChooser() {
+        var obj = {
+          columnDetails: this.columnChooserValues,
+          actionName: 'columnChooser',
+          customEvent: 'columnChooser',
+        }
+        this.columnChooserArr = JSON.parse(JSON.stringify(this.columnChooserValues));
+        this.dispatchEvent(new CustomEvent('gridActions', { detail: obj, bubbles: true, composed: true }));
+        this.showColumnChooser = false;
+      }
+
+      _closeColumnChooser() {
+        this.columnChooserValues = JSON.parse(JSON.stringify(this.columnChooserArr));
+        this.showColumnChooser = false;
+      }
+
+
+      _addTests(ev) {
+        var element = $(ev.currentTarget)[0];
+        var obj = {
+          actionName: element.dataEventname
+        }
+        this.dispatchEvent(new CustomEvent('addTests', { detail: obj, bubbles: true, composed: true }));
+      }
+
+      _bulkAction(ev) {
+        var element = $(ev.currentTarget)[0];
+        var isDisabled = false;
+        this.testConfig.bulkActions.forEach(function (action) {
+          if (element.dataEventname === action.customEvent && action.disabled) {
+            isDisabled = true;
+          }
+        });
+        if (isDisabled) {
+          return;
+        }
+        var obj = {};
+        var isSelected;
+        var boolean = false;
+        this.selectAll = !this.selectAll;
+        if (element.dataEventname === 'selectRows') {
+          var that = this;
+          isSelected = element.classList.contains('allSelected');
+          if (element.classList.contains('allSelected')) {
+            element.classList.remove('allSelected');
+            boolean = false;
+          } else {
+            element.classList.add('allSelected');
+            boolean = true;
+          }
+          this.rowsSelection.map(function (row, index) {
+            var rowId = row.rowId;
+            var path = 'rowsSelection.' + index.toString();
+            that.set(path, { rowId: rowId, selected: !isSelected, permission: row.permission });
+          });
+          this.get('rowsSelection').map(function (row) {
+            if (that.testConfig.checkedRowId.indexOf(row.rowId) >= 0) {
+              var rowIndex = that.testConfig.checkedRowId.indexOf(row.rowId);
+              that.testConfig.checkedRowId.splice(rowIndex, 1);
+            }
+          });
+
+          //var imgSrc = isSelected ? imgSrc
+          this.testConfig.bulkActions.map(function (action, index) {
+            var path = 'testConfig.bulkActions.' + index.toString();
+            var imgSrcChecked = action.imgSrcChecked,
+              imgSrcUnchecked = action.imgSrc;
+            var disabled = action.customEvent == 'selectRows' ? action.disabled : isSelected;
+            if (action.customEvent === 'bulkDelete' && (that.testConfig.checkedRowId && that.testConfig.checkedRowId.length)) {
+              disabled = false;
+            }
+            that.set(path, { actionName: action.actionName, customEvent: action.customEvent, disabled: disabled, imgSrc: imgSrcChecked, imgSrcChecked: imgSrcUnchecked });
+          });
+        }
+        var selectedRow = [];
+        this.get('rowsSelection').map(function (row) {
+          if (row.selected) { selectedRow.push(row.rowId); }
+        });
+
+        var obj = {
+          columnsValues: this.saveRowValues,
+          rowsSelection: selectedRow,
+          rowData: this.get('rowsSelection'),
+          actionName: element.dataEventname,
+          customEvent: element.dataCustomevent
+        };
+        if (boolean) {
+          element.classList.add('allSelected');
+        } else {
+          element.classList.remove('allSelected');
+        }
+        this.dispatchEvent(new CustomEvent('gridBulkActions', { detail: obj, bubbles: true, composed: true }));
+      }
+
+
+      _sortGrid(ev) {
+        var sortOrder = ev.currentTarget.dataSortorder;
+        var sortkey = ev.currentTarget.dataColumnkey;
+        if (sortOrder === '' || sortOrder === 'DESC') {
+          sortOrder = 'ASC';
+        } else if (sortOrder === 'ASC') {
+          sortOrder = 'DESC';
+        }
+        var obj = {
+          sortQuery: { sortkey: sortkey, sortOrder: sortOrder },
+          actionName: 'sortGrid',
+          customEvent: 'sortGrid',
+        }
+        this.dispatchEvent(new CustomEvent('gridActions', { detail: obj, bubbles: true, composed: true }))
+      }
+
+      _gridValueChanged(newValue) {
+        var value = JSON.parse(newValue);
+        if (value.newRow) {
+          // this.testConfig.row.splice(-1, 0, value);
+          // var temp = this.get("testConfig.row");
+          // this.set('testConfig.row', []);
+          // this.set('testConfig.row', temp);
+        } else if (value.deleteRow) {
+          // this.testConfig.row.splice(value.index,1);
+          // var freezedColumnRow = $(this.$.freezeColumns).find('.table-row')[value.index + 1];
+          // var unfreezedColumnRow = $(this.$.unfreezeColumns).find('.table-row')[value.index + 1];
+          // var actionColumnRow = $(this.$.gridActions).find('.table-row')[value.index + 1];
+          // var draggableColumnRow = $(this.$.draggableColumn).find('.table-row')[value.index + 1];
+          // var gridSelectionRow = $(this.$.gridSelection).find('.table-row')[value.index + 1];
+
+          // freezedColumnRow && (freezedColumnRow.parentNode.removeChild(freezedColumnRow))
+          // unfreezedColumnRow && (unfreezedColumnRow.parentNode.removeChild(unfreezedColumnRow))
+          // actionColumnRow && (actionColumnRow.parentNode.removeChild(actionColumnRow))
+          // draggableColumnRow && (draggableColumnRow.parentNode.removeChild(draggableColumnRow))
+          // gridSelectionRow && (gridSelectionRow.parentNode.removeChild(gridSelectionRow))
+          // this.initialCount = 50;
+          // this.splice('testConfig.row', value.index, 1);
+        } else {
+          this.set('testConfig.row.' + value.index, Object.assign({}, this.get('testConfig.row.' + value.index), value));
+          var that = this;
+          if (value.editMode) {
+            this.testConfig.head.map(function (column) {
+              if ((column.type === 'DATE' || column.type === 'DATE_TIME') && value[column.key] !== '') {
+                if (that.saveRowValues[value.id]) {
+                  that.saveRowValues[value.id][column.key] = {
+                    selectedOptions: '',
+                    value: value[column.key]
+                  };
+                } else {
+                  that.saveRowValues[value.id] = {};
+                  that.saveRowValues[value.id][column.key] = {
+                    selectedOptions: '',
+                    value: value[column.key]
+                  };
+                }
+              }
+            });
+          }
+          // console.log(this.get('testConfig.row.' + value.index));
+        }
+      }
+
+      _fetchdefect(ev) {
+        this.dispatchEvent(new CustomEvent('fetchdefect', { detail: ev.detail, bubbles: true, composed: true }));
+      }
+
+    }
+    customElements.define(GridComponent.is, GridComponent);
+
+  </script>
+</dom-module>

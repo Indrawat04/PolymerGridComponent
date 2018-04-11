@@ -1,0 +1,318 @@
+<dom-module id="drop-downradio">
+  <template>
+    <custom-style>
+      <style>
+        .drop-downradio .dropDown-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+          min-width: 1px;
+        }
+  
+        .drop-downradio.isStandAlone .dropDown-wrapper.select-status span:nth-child(1),
+        .drop-downradio .dropDown-wrapper.select-status span:nth-child(1) {
+          color: #FFF;
+          border: 0;
+        }
+  
+        .drop-downradio .dropDown-wrapper span:nth-child(1) {
+          display: flex;
+          align-items: center;
+          height: 20px;
+          margin-right: 2px;
+          padding-right: 10px;
+          justify-content: center;
+          text-align: center;
+          flex-grow: 1;
+          color: #333;
+          background-color: #F7F8F9;
+          font-size: 12px;
+          overflow: hidden;
+          border-radius: 4px 0 0 4px;
+          border: 1px solid #DEE1E6;
+          box-sizing: border-box;
+        }
+  
+        .drop-downradio .dropDown-wrapper>span:nth-child(1)>div {
+          text-overflow: ellipsis;
+          overflow: hidden;
+          white-space: nowrap;
+          width: 100%;
+        }
+  
+        .drop-downradio .dropDown-wrapper>span:nth-child(1)>div:empty:after {
+          content: 'Choose Value...';
+        }
+  
+        .drop-downradio .dropDown-wrapper .trigger-dropDown {
+          min-width: 20px;
+          height: 20px;
+          vertical-align: baseline;
+          background-color: #deebff;
+          display: inline-block;
+          cursor: pointer;
+          border-radius: 0 3px 3px 0;
+          outline: none;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+  
+        .drop-downradio .dropDown-wrapper .trigger-dropDown:hover {
+          background: #B2D4FF;
+        }
+  
+        .drop-downradio .dropDown-container {
+          position: absolute;
+          z-index: 300;
+          top: 21px;
+          left: 0;
+          background-color: #fff;
+          border: 1px solid #dfe1e6;
+          border-bottom-left-radius: 3px;
+          border-bottom-right-radius: 3px;
+          box-shadow: 0 3px 6px rgba(0, 0, 0, .2);
+          width: calc(100% - 25px);
+        }
+  
+        .drop-downradio .dropDown-container ul {
+          list-style: none;
+          margin: 2px 0;
+          padding-left: 0;
+          max-height: 100px;
+          overflow: auto;
+        }
+  
+        .drop-downradio .dropDown-container ul li {
+          width: 100%;
+          padding: 3px 10px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-size: 12px;
+          box-sizing: border-box;
+        }
+  
+        .drop-downradio .dropDown-container ul li:hover {
+          background-color: #ebecf0;
+        }
+  
+        .drop-downradio.cell-wrapper.drop-Down {
+          width: 125px;
+        }
+  
+        .drop-downradio.cell-wrapper.drop-Down.isStandAlone {
+          width: auto;
+          min-width: 125px;
+        }
+  
+        .drop-downradio.isStandAlone .dropDown-wrapper>span:nth-child(1) {
+          height: 30px;
+          color: #333;
+          padding-right: 15px;
+        }
+  
+        .drop-downradio.isStandAlone .dropDown-wrapper .trigger-dropDown {
+          min-width: 30px;
+          height: 30px;
+        }
+  
+        .drop-downradio.isStandAlone .dropDown-container {
+          width: 100%;
+          top: 30px;
+        }
+  
+        .drop-downradio .dropDown-container.open {
+          display: block;
+        }
+  
+        .drop-downradio.isGrid .dropDown-container.open {
+          width: 120px;
+        }
+  
+        .drop-downradio.isGrid .dropDown-container {
+          position: fixed;
+          /* visibility: visible; */
+          /* display: block; */
+        }
+  
+        .drop-downradio .dropDown-container.close {
+          /* visibility: hidden; */
+          display: none;
+        }
+  
+        .drop-downradio.isStandAlone .remove-data {
+          right: 40px;
+          font-weight: bold;
+        }
+  
+        .drop-downradio .remove-data {
+          position: absolute;
+          right: 26px;
+          font-weight: 500;
+          cursor: pointer;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+      </style>
+    </custom-style>
+    <div class$="cell-wrapper drop-Down drop-downradio {{_checkIsGrid(isgrid)}}" data-columnid="status">
+      <div class="dropDown-wrapper">
+        <span id="dropDown" title="{{value}}">
+          <div>{{value}}</div>
+        </span>
+        <template is="dom-if" if="{{value}}">
+          <span class="remove-data" on-click="_emptyData">x</span>
+        </template>
+        <span class="trigger-dropDown" on-click="_triggerDropDown" tabindex="-1" on-focusout="_checkblur">
+          <template is="dom-if" if="{{imgurl}}">
+            <!-- <img src="{{imgurl}}"> -->
+          </template>
+        </span>
+        <div tabindex="-1" class$="content dropDown-container {{_dropDownOpen(openDropDown)}}">
+          <ul>
+            <template is="dom-repeat" items="{{cloneOptions}}" index-as="indexRow">
+              <li data-value="{{item.value}}">
+                <input type="radio" name="radio" content="{{item.content}}" value="{{item.value}}" checked="{{item.selected}}" on-change="_handleChange"
+                  id="radio-{{cellkey}}-{{rowid}}-{{indexRow}}">
+                <label class="content" for$="radio-{{cellkey}}-{{rowid}}-{{indexRow}}" tabindex="-1" title={{item.content}}>{{item.content}}</label>
+              </li>
+            </template>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </template>
+  <script>
+    class DropDownRadio extends Polymer.Element {
+      static get is() { return "drop-downradio"; }
+      constructor() {
+        super();
+        this.selectedRadioValues = '';
+        this.selectedRadioContent = '';
+        this.openDropDown = false;
+        this.value = '';
+        this.cloneOptions = [];
+        this.trigger;
+        this.oldValue = '';
+      }
+
+      static get properties() {
+        return {
+          options: {
+            type: Array,
+            value: [],
+            observer: '_optionsChanged'
+          },
+          rowid: {
+            type: String,
+            value: ''
+          },
+          cellkey: {
+            type: String,
+            value: ''
+          },
+          isgrid: {
+            type: Boolean,
+            value: false
+          },
+          imgurl: {
+            type: String,
+            value: ''
+          }
+        }
+      };
+
+      _optionsChanged(newValue) {
+        this.cloneOptions = JSON.parse(JSON.stringify(newValue));
+        this._assignValues(newValue);
+      }
+
+      _checkIsGrid(bool) {
+        return bool ? "isGrid" : "isStandAlone";
+      }
+
+      _dropDownOpen(bool) {
+        return bool ? "open" : "close";
+      }
+
+      _assignValues(value) {
+        var that = this;
+        this.selectedRadioContent = '';
+        this.selectedRadioValues = '';
+        value.map(option => {
+          if (option.selected) {
+            that.selectedRadioValues = option.value;
+            that.selectedRadioContent = option.content;
+          }
+        })
+
+        this.cloneOptions = this.options;
+        this.value = this.selectedRadioValues;
+        this.oldValue = this.value;
+      }
+
+      _triggerDropDown(ev) {
+        this.openDropDown = !this.openDropDown;
+        this.trigger = ev.currentTarget;
+        if (this.isgrid) {
+          var triggerElement = ev.currentTarget.getBoundingClientRect();
+          var viewportHeight = window.innerHeight;
+          var height = this.shadowRoot.querySelector('.dropDown-container').clientHeight;
+          var topHeight = triggerElement.top + triggerElement.height + 2;
+          var parentWidth = $(ev.currentTarget).parents('.cell-wrapper')[0].clientWidth;
+          if (viewportHeight > (topHeight + height))
+            $(this.shadowRoot.querySelector('.dropDown-container')).css({ 'top': topHeight, 'left': triggerElement.left - parentWidth + triggerElement.width, 'width': parentWidth })
+          else {
+            $(this.shadowRoot.querySelector('.dropDown-container')).css({ 'top': topHeight - triggerElement.height - height - 8, 'left': triggerElement.left - parentWidth + triggerElement.width, 'width': parentWidth })
+          }
+        }
+      }
+
+
+
+      _handleChange(e) {
+        var that = this;
+        if (e.target.checked) {
+          this.selectedRadioValues = e.target.value;
+          this.selectedRadioContent = e.target.content;
+        }
+        this.value = this.selectedRadioContent;
+        this.cloneOptions.map(function (option, index) {
+          var path = 'cloneOptions.' + index.toString();
+          if (option.value === e.target.value) {
+            that.set(path, { content: option.content, value: option.value, selected: true });
+          } else {
+            that.set(path, { content: option.content, value: option.value, selected: false });
+          }
+        });
+        this.trigger.focus();
+      }
+
+      _emptyData(ev) {
+        this.openDropDown = false;
+        this.value = '';
+        this.selectedRadioValues = '';
+        this.selectedRadioContent = '';
+        this.cloneOptions.map(function (option, index) {
+          var path = 'cloneOptions.' + index.toString();
+          that.set(path, { content: option.content, value: option.value, selected: false });
+        });
+        this.dispatchEvent(new CustomEvent('submitvalue', { detail: { oldValue: this.oldValue, type: 'RADIO_BUTTON', value: this.selectedRadioValues, contentValue: this.selectedRadioContent }, bubbles: true, composed: true }));      }
+
+      _checkblur(ev) {
+        if (ev.relatedTarget && (ev.relatedTarget.localName === 'input' || ev.relatedTarget.className.indexOf('content') >= 0) && !(ev.relatedTarget.type == 'submit')) {
+          this.trigger.focus();
+          this.openDropDown = true;
+        } else {
+          this.openDropDown = false;
+          if (this.oldValue !== this.selectedRadioContent)
+            this.dispatchEvent(new CustomEvent('submitvalue', { detail: { oldValue: this.oldValue, type: 'RADIO_BUTTON', value: this.selectedRadioValues, contentValue: this.selectedRadioContent }, bubbles: true, composed: true }));
+        }
+      }
+    }
+    customElements.define(DropDownRadio.is, DropDownRadio);
+  </script>
+
+</dom-module>

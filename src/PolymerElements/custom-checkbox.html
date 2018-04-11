@@ -1,0 +1,280 @@
+<dom-module id="custom-checkbox">
+  <template>
+    <custom-style>
+      <style>
+        .custom-checkbox .editable-field {
+          box-sizing: border-box;
+          border-radius: 2.01px;
+          box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+          display: inline-block;
+          max-width: 100%;
+          padding: 2px 5px 2px 5px;
+          position: relative;
+          transition: box-shadow 150ms ease-in 0ms;
+          vertical-align: top;
+          min-height: 26px;
+          min-width: 80px;
+          width: 100%;
+        }
+  
+        .custom-checkbox .editable-field:hover {
+          background-color: #FFFFFF;
+          box-shadow: 0 0 0 1px #CCCCCC;
+        }
+  
+        .custom-checkbox .editable-field .overlay-icon {
+          box-sizing: border-box;
+          background-color: #F0F0F0;
+          background-position: 4px 4px;
+          background-repeat: no-repeat;
+          border-left: 1px solid #CCCCCC;
+          bottom: 0;
+          height: auto;
+          margin: 0;
+          opacity: 0;
+          position: absolute;
+          right: 0;
+          top: 0;
+          width: 24px;
+          z-index: -1;
+        }
+  
+        .custom-checkbox .editable-field:hover .overlay-icon {
+          transition: opacity 150ms ease-in 0ms;
+          opacity: 1;
+          z-index: auto;
+        }
+  
+        .custom-checkbox .overlay-icon .icon-pencil {
+          padding: 5px;
+          vertical-align: sub;
+        }
+  
+        .custom-checkbox .editable-cell-container .cell-editMode {
+          position: relative;
+        }
+  
+        .custom-checkbox .editable-cell-container .noInlineEdit .cell-editMode {
+          padding: 0px;
+        }
+  
+        .custom-checkbox .editable-cell-container #editMode {
+          outline: none;
+        }
+  
+        .custom-checkbox .update-cancel-buttons {
+          background-color: #F0F0F0;
+          border-color: -moz-use-text-color #CCCCCC #CCCCCC;
+          border-image: none;
+          border-radius: 0 0 3px 3px;
+          border-width: medium 1px 1px;
+          box-shadow: 0 3px 6px rgba(111, 111, 111, 0.2);
+          outline: medium none;
+          padding: 3px;
+          position: absolute;
+          right: 31px;
+          z-index: 1;
+        }
+  
+        .custom-checkbox .update-cancel-buttons button {
+          width: 20px;
+          height: 20px;
+          padding: 0;
+        }
+  
+        .custom-checkbox .update-cancel-buttons button i {
+          font-size: 12px;
+          vertical-align: text-top;
+        }
+  
+        .custom-checkbox .sortable {
+          margin-left: 5px;
+          cursor: pointer;
+        }
+  
+        .custom-checkbox .cell-editMode {
+          display: flex;
+          justify-content: flex-start;
+        }
+  
+        .custom-checkbox label {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          width: calc(100% - 20px);
+          color: #5E6C84;
+        }
+  
+        .custom-checkbox input[type=checkbox],
+        .custom-checkbox input[type=radio] {
+          width: 20px;
+          height: inherit;
+        }
+  
+        .custom-checkbox.isStandAlone textarea,
+        .custom-checkbox.isStandAlone input {
+          height: 30px;
+          width: 100%;
+        }
+  
+        .custom-checkbox input,
+        .custom-checkbox textarea {
+          width: 100px;
+          height: 30px;
+          box-sizing: border-box;
+          border-radius: 3px;
+          border: 1px solid #ccc;
+          outline: none;
+        }
+      </style>
+  
+    </custom-style>
+  
+    <div class="cell-wrapper custom-checkbox" data-columnid="status">
+      <div class="editable-cell-container">
+        <template is="dom-if" if="{{readMode}}">
+          <div class="cell-readMode">
+            <div class="editable-field" on-click="_changeMode">
+              <div>
+                <span>{{value}}</span>
+              </div>
+            </div>
+          </div>
+        </template>
+        <div id="editMode" tabindex="-1" on-focusout="_checkblur">
+          <template is="dom-if" if="{{editMode}}">
+            <div class="cell-editMode">
+              <template is="dom-repeat" items="{{cloneOptions}}" index-as="indexRow">
+                <input id={{indexRow}} type="checkbox" content="{{item.content}}" value="{{item.value}}" checked="{{item.selected}}" on-change="_handleChange">
+                <label for$={{indexRow}} title="{{item.content}}">{{item.content}}</label>
+              </template>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </template>
+
+<script>
+  class CustomCheckbox extends Polymer.Element {
+    static get is() { return "custom-checkbox"; }
+    constructor() {
+      super();
+      this.selectedCheckboxValues = [];
+      this.selectedCheckboxContent = [];
+      this.readMode = true;
+      this.editMode = false;
+      this.value = '';
+      this.cloneOptions = '';
+      this.class = 'noInlineEdit';
+    }
+    static get properties() {
+      return {
+        options : {
+          type : Array,
+          value: [],
+          observer: '_optionsChanged'
+        },
+        rowid : {
+          type : String,
+          value : ''
+        },
+        cellkey : {
+          type : String,
+          value : ''
+        },
+        mode : {
+          type : String,
+          value : 'read',
+          observer : '_modeChange'
+        },
+        change : {
+          type : Boolean,
+          value : false,
+        }
+      }
+    };
+
+    _optionsChanged(newValue) {
+      if(typeof newValue === 'string') {
+        newValue = JSON.parse(newValue);
+      }
+      this.cloneOptions = JSON.parse(JSON.stringify(newValue));
+      this._assignValues(newValue);
+    }
+
+    _assignValues(value) {
+      var that = this;
+      this.selectedCheckboxValues = [];
+      this.selectedCheckboxContent = [];
+      value.map(option => {
+        if(option.selected) {
+          that.selectedCheckboxValues.push(option.value);
+          that.selectedCheckboxContent.push(option.content);
+        }
+      })
+      this.value = this.selectedCheckboxContent.toString();
+    }
+
+    _modeChange(newValue) {
+      if(this.mode === 'read') {
+        this.readMode = true;
+        this.editMode = false;
+      } else {
+        this.readMode = false;
+        this.editMode = true;
+      }
+    }
+
+    _changeMode() {
+      this.readMode = false;
+      this.editMode = true;
+      this.$.editMode.focus();
+   }
+
+
+    _handleChange(e) {
+      var index = this.selectedCheckboxValues.indexOf(e.target.value);
+      if(e.target.checked) {
+        this.selectedCheckboxValues.push(e.target.value);
+        this.selectedCheckboxContent.push(e.target.content);
+      } else {
+        if(index >= 0) {
+          this.selectedCheckboxValues.splice(index,1);
+          this.selectedCheckboxContent.splice(index,1);
+        }
+      }
+      this.cloneOptions.map(option => {
+        if(option.value === e.target.value) {
+          if(e.target.checked) {
+            option.selected = true;
+          }
+          else {
+            option.selected = false;
+          }
+        }
+      });
+      if(this.change) {
+        this.dispatchEvent(new CustomEvent('submitvalue',{detail : { rowId: this.rowid, type: 'checkbox', value : this.selectedCheckboxValues,contentValue : this.selectedCheckboxContent},bubbles: true, composed: true}));
+      }
+    }
+
+    _checkblur(ev) {
+      if(!this.change) {
+        if(ev.relatedTarget && ev.relatedTarget.localName === 'input' && !(ev.relatedTarget.type == 'submit')) {
+          this.$.editMode.focus();
+        } else {
+          if(this.mode === 'read') {
+            this.readMode = true;
+            this.editMode = false;
+          }
+          this.options = JSON.parse(JSON.stringify(this.cloneOptions));
+          this.dispatchEvent(new CustomEvent('submitvalue',{bubbles: true, composed: true}));
+        }
+      }
+    }
+  }
+  customElements.define(CustomCheckbox.is, CustomCheckbox);
+</script>
+
+</dom-module>

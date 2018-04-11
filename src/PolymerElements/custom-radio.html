@@ -1,0 +1,237 @@
+<dom-module id="custom-radio">
+    <template>
+      <custom-style>
+        <style>
+          .custom-radio .editable-field {
+            box-sizing: border-box;
+            border-radius: 2.01px;
+            box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+            display: inline-block;
+            max-width: 100%;
+            padding: 2px 5px 2px 5px;
+            position: relative;
+            transition: box-shadow 150ms ease-in 0ms;
+            vertical-align: top;
+            min-height: 26px;
+            min-width: 80px;
+            width: 100%;
+          }
+    
+          .custom-radio .editable-field:hover {
+            background-color: #FFFFFF;
+            box-shadow: 0 0 0 1px #CCCCCC;
+          }
+    
+          .custom-radio .editable-field .overlay-icon {
+            box-sizing: border-box;
+            background-color: #F0F0F0;
+            background-position: 4px 4px;
+            background-repeat: no-repeat;
+            border-left: 1px solid #CCCCCC;
+            bottom: 0;
+            height: auto;
+            margin: 0;
+            opacity: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 24px;
+            z-index: -1;
+          }
+    
+          .custom-radio .editable-field:hover .overlay-icon {
+            transition: opacity 150ms ease-in 0ms;
+            opacity: 1;
+            z-index: auto;
+          }
+    
+          .custom-radio .overlay-icon .icon-pencil {
+            padding: 5px;
+            vertical-align: sub;
+          }
+    
+          .custom-radio .editable-cell-container .cell-editMode {
+            position: relative;
+          }
+    
+          .custom-radio .editable-cell-container #editMode {
+            outline: none;
+          }
+    
+          .custom-radio .editable-cell-container .noInlineEdit .cell-editMode {
+            padding: 0px;
+          }
+    
+          .custom-radio .update-cancel-buttons {
+            background-color: #F0F0F0;
+            border-color: -moz-use-text-color #CCCCCC #CCCCCC;
+            border-image: none;
+            border-radius: 0 0 3px 3px;
+            border-width: medium 1px 1px;
+            box-shadow: 0 3px 6px rgba(111, 111, 111, 0.2);
+            outline: medium none;
+            padding: 3px;
+            position: absolute;
+            right: 31px;
+            z-index: 1;
+          }
+    
+          .custom-radio .update-cancel-buttons button {
+            width: 20px;
+            height: 20px;
+            padding: 0;
+          }
+    
+          .custom-radio .update-cancel-buttons button i {
+            font-size: 12px;
+            vertical-align: text-top;
+          }
+    
+          .custom-radio .sortable {
+            margin-left: 5px;
+            cursor: pointer;
+          }
+    
+          .custom-radio input {
+            width: 100px;
+          }
+    
+          .custom-radio input[type=checkbox],
+          .custom-radio input[type=radio] {
+            width: 20px;
+          }
+        </style>
+      </custom-style>
+      <div class="cell-wrapper custom-radio" data-columnid="status">
+        <div class="editable-cell-container">
+          <template is="dom-if" if="{{readMode}}">
+            <div class="cell-readMode">
+              <div class="editable-field" on-click="_changeMode">
+                <div>
+                  <span>{{value}}</span>
+                </div>
+              </div>
+            </div>
+          </template>
+          <div id="editMode" tabindex="-1" on-focusout="_checkblur">
+            <template is="dom-if" if="{{editMode}}">
+              <div class="cell-editMode">
+                <template is="dom-repeat" items="{{cloneOptions}}">
+                  <input type="radio" name="radio" content="{{item.content}}" value="{{item.value}}" checked="{{item.selected}}" on-change="handleChange">{{item.content}}
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </template>
+
+<script>
+  class CustomRadio extends Polymer.Element {
+    static get is() { return "custom-radio"; }
+    constructor() {
+      super();
+      this.selectedRadioValues = '';
+      this.selectedRadioContent = '';
+      this.readMode = true;
+      this.editMode = false;
+      this.value = '';
+      this.cloneOptions = '';
+    }
+    static get properties() {
+      return {
+        options : {
+          type : Array,
+          value: [],
+          observer: '_optionsChanged'
+        },
+        rowid : {
+          type : String,
+          value : ''
+        },
+        cellkey : {
+          type : String,
+          value : ''
+        },
+        mode : {
+          type : String,
+          value : 'read',
+          observer : '_modeChange'
+        },
+      }
+    };
+
+    _optionsChanged(newValue) {
+      this.cloneOptions = JSON.parse(JSON.stringify(newValue));
+      this._assignValues(newValue);
+      this.addEventListener('submitValue', this._submitValue);
+    }
+
+    _assignValues(value) {
+      var that = this;
+      this.selectedRadioContent = [];
+      this.selectedRadioValues = [];
+      value.map(option => {
+        if(option.selected) {
+          that.selectedRadioValues = option.value;
+          that.selectedRadioContent = option.content;
+        }
+      })
+      if(this.selectedRadioValues === '') {
+        this.setProperties('options',this.options.splice(0,0,{value: "", content: "None", selected: true}));
+      } else {
+        this.setProperties('options',this.options.splice(0,0,{value: "", content: "None", selected: false}));
+      }
+      this.value = this.selectedRadioContent.toString();
+    }
+
+    _modeChange(newValue) {
+      if(this.mode === 'read') {
+        this.readMode = true;
+        this.editMode = false;
+      } else {
+        this.readMode = false;
+        this.editMode = true;
+      }
+    }
+
+    _changeMode() {
+      this.readMode = false;
+      this.editMode = true;
+      this.$.editMode.focus();
+    }
+
+    handleChange(e) {
+      if(e.target.checked) {
+        this.selectedRadioValues = e.target.value;
+        this.selectedRadioContent = e.target.content;
+      }
+      this.cloneOptions.map(option => {
+        if(option.value === e.target.value) {
+            option.selected = true;
+        } else {
+            option.selected = false;
+        }
+      });
+
+    }
+
+    _checkblur(ev) {
+      if(ev.relatedTarget && ev.relatedTarget.localName === 'input') {
+        this.$.editMode.focus();
+      } else {
+        if(this.mode === 'read') {
+          this.readMode = true;
+          this.editMode = false;
+        }
+        this.options = JSON.parse(JSON.stringify(this.cloneOptions));
+        this.dispatchEvent(new CustomEvent('submitvalue',{detail : {type: 'RADIO_BUTTON', value : this.selectedRadioValues, contentValue : this.selectedRadioContent},bubbles: true, composed: true}));
+      }
+    }
+
+
+  }
+  customElements.define(CustomRadio.is, CustomRadio);
+</script>
+
+</dom-module>

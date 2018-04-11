@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>PolymerGridComponent</title>
+    <meta name="description" content="PolymerGridComponent description">
+
+    <!-- See https://goo.gl/OOhYW5 -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- <script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script> -->
+    <script src="/src/poly-perf/perf.js"></script>
+    <script src="/bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+
+
+    <link rel="import" href="/src/polymergridcomponent-app/polymergridcomponent-app.html">
+  </head>
+  <body>
+    <script>
+      console.perf();
+    </script>
+    <polymergridcomponent-app></polymergridcomponent-app>
+    <script>
+      console.perfEnd();
+    </script>
+  </body>
+</html>

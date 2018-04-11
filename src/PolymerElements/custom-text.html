@@ -1,0 +1,348 @@
+<dom-module id="custom-text">
+    <template>
+      <custom-style>
+        <style>
+          .custom-text input {
+            width: 100px;
+          }
+    
+          .custom-text .editable-field.empty {
+            box-shadow: 0 0 0 1px #CCCCCC;
+          }
+    
+          .custom-text .editable-field {
+            box-sizing: border-box;
+            border-radius: 2.01px;
+            box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+            display: inline-block;
+            max-width: 100%;
+            padding: 2px 5px 2px 5px;
+            position: relative;
+            transition: box-shadow 150ms ease-in 0ms;
+            vertical-align: top;
+            min-height: 26px;
+            min-width: 80px;
+            width: 100%;
+          }
+    
+          .custom-text .editable-field:hover {
+            background-color: #FFFFFF;
+            box-shadow: 0 0 0 1px #CCCCCC;
+          }
+    
+          .custom-text .editable-field .overlay-icon {
+            box-sizing: border-box;
+            background-color: #F0F0F0;
+            background-position: 4px 4px;
+            background-repeat: no-repeat;
+            border-left: 1px solid #CCCCCC;
+            bottom: 0;
+            height: auto;
+            margin: 0;
+            opacity: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 24px;
+            z-index: -1;
+          }
+    
+          .custom-text .editable-field:hover .overlay-icon {
+            transition: opacity 150ms ease-in 0ms;
+            opacity: 1;
+            z-index: auto;
+          }
+    
+          .custom-text .overlay-icon .icon-pencil {
+            padding: 5px;
+            vertical-align: sub;
+          }
+    
+          .custom-text .editable-cell-container .cell-editMode {
+            position: relative;
+          }
+    
+          .custom-text .editable-cell-container #editMode {
+            outline: none;
+          }
+    
+          .custom-text .editable-cell-container .noInlineEdit .cell-editMode {
+            padding: 0px;
+          }
+    
+          .custom-text .update-cancel-buttons {
+            background-color: #F0F0F0;
+            border-color: -moz-use-text-color #CCCCCC #CCCCCC;
+            border-image: none;
+            border-radius: 0 0 3px 3px;
+            border-width: medium 1px 1px;
+            box-shadow: 0 3px 6px rgba(111, 111, 111, 0.2);
+            outline: medium none;
+            padding: 3px;
+            position: absolute;
+            right: 31px;
+            z-index: 1;
+          }
+    
+          .custom-text .update-cancel-buttons button {
+            width: 20px;
+            height: 20px;
+            padding: 0;
+          }
+    
+          .custom-text .update-cancel-buttons button i {
+            font-size: 12px;
+            vertical-align: text-top;
+          }
+    
+          .custom-text .sortable {
+            margin-left: 5px;
+            cursor: pointer;
+          }
+    
+          .custom-text input,
+          .custom-text textarea {
+            width: 100%;
+            height: 30px;
+            box-sizing: border-box;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+            outline: none;
+            resize: none;
+          }
+    
+          .custom-text input {
+            box-shadow: none;
+          }
+    
+          .custom-text input:-moz-placeholder {
+            box-shadow: none !important;
+          }
+    
+          .custom-text input[type=checkbox],
+          .custom-text input[type=radio] {
+            width: 20px;
+    
+          }
+    
+          .custom-text.isStandAlone textarea,
+          .custom-text.isStandAlone input {
+            height: 30px;
+            width: 100%;
+            resize: none;
+          }
+    
+          .table-columns.htmlComment .custom-text.isStandAlone textarea {
+            height: 100px;
+          }
+    
+          .custom-text .cell-readMode.editMode {
+            display: none;
+          }
+        </style>
+      </custom-style>
+    
+      <div class$="cell-wrapper {{_checkIsGrid(isgrid)}} custom-text" data-columnid="status">
+        <div class="editable-cell-container">
+          <div class$="cell-readMode {{_checkRender(readMode)}}">
+            <div id="editableField" class="editable-field" on-click="_changeMode">
+              <div>
+                <span id="renderHTML" class="readValues"></span>
+              </div>
+            </div>
+          </div>
+          <div id="editMode" tabindex="-1">
+            <template is="dom-if" if="{{editMode}}">
+              <div class="cell-editMode">
+                <template is="dom-if" if="[[isInputType(type)]]">
+                  <input tabindex="-1" placeholder="Enter Value..." type="{{typeLowerCase}}" value="{{editValue}}" title="{{editValue}}" on-keypress="handleChange1"
+                    on-change="handleChange" maxlength="255" on-focusout="_checkblur">
+                </template>
+                <template is="dom-if" if="[[!isInputType(type)]]">
+                  <textarea tabindex="-1" maxlength="750" placeholder="Enter Value..." title="{{editValue}}" maxlength="750" on-keypress="handleChange1"
+                    on-change="handleChange" on-focusout="_checkblur">{{editValue}}</textarea>
+                </template>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </template>
+<script>
+  class CustomText extends Polymer.Element {
+    static get is() { return "custom-text"; }
+
+    constructor() {
+      super();
+      this.readMode = true;
+      this.editMode = false;
+      this.value = '';
+      this.editValue = '';
+      this.type = "text";
+      this.typeLowerCase = "text";
+      this.oldValue = '';
+    }
+
+    static get properties() {
+      return {
+        type : {
+          type : String,
+          value: 'text'
+        },
+        options : {
+          type : Array,
+          value: [],
+          observer: '_optionsChanged'
+        },
+        rowid : {
+          type : String,
+          value : ''
+        },
+        cellkey : {
+          type : String,
+          value : ''
+        },
+        mode : {
+          type : String,
+          value : 'read',
+          observer : '_modeChange'
+        },
+        inlineedit : {
+          type: Boolean,
+          value : true
+        },
+        isGrid : { type: Boolean, value: '' }
+      }
+    };
+
+    _optionsChanged(newValue) {
+      if(!newValue){
+        return;
+      }
+
+      var value = JSON.parse(JSON.stringify(newValue));
+      if (value[0].isHTMLKey) {
+        this.editValue = value[0].readValue;
+      } else {
+        this.editValue = value[0].value;
+      }
+      this.value = value[0].value || "";
+      this.type = value[0].type;
+      this.typeLowerCase = this.type.toLowerCase();
+      this.$.renderHTML.innerHTML = this.value;
+      this.$.renderHTML.setAttribute('title', this.value);
+      this.oldValue = this.editValue;
+      if (!this.value) {
+        $(this.$.editableField).addClass('empty');
+      } else {
+        $(this.$.editableField).removeClass('empty');
+      }
+    }
+
+    _checkRender(bool) {
+      return bool ? "readMode" : "editMode";
+    }
+
+    _checkIsGrid(bool) {
+      return bool ? "isGrid" : "isStandAlone";
+    }
+
+    isInputType(type) {
+      return type === 'TEXT' || type === 'NUMBER';
+    }
+
+    _modeChange(newValue) {
+      if(this.mode === 'read') {
+        this.readMode = true;
+        this.editMode = false;
+      } else {
+        this.readMode = false;
+        this.editMode = true;
+      }
+    }
+
+    _changeMode() {
+      this.readMode = false;
+      this.editMode = true;
+      let that = this;
+      setTimeout(function(){
+        $(that.$.editMode).find('input').focus();
+        var targetElement = $(that.$.editMode).find('textarea');
+        $(targetElement).height('auto');
+        $(targetElement[0]).parent().height('auto');
+        targetElement.focus();
+        element = targetElement[0];
+        if (element && element.scrollHeight > 1) {
+          // this.style.height = 'auto';
+          element.style.height = element.scrollHeight - 2 + 'px';
+          var _scrollHeight = element.scrollHeight;
+          _scrollHeight += 17;
+          $(element).parent().height(_scrollHeight);
+        }
+        that.dispatchEvent(new CustomEvent('adjustrowheight', { bubbles: true, composed: true }));
+        targetElement.focus();
+      }, 100);
+    }
+
+    handleChange1(ev) {
+      ev.stopPropagation();
+      ev.stopImmediatePropagation();
+    }
+
+    handleChange(e) {
+      this.editValue = e.target.value;
+      if (e.target.type == 'number') {
+        e.target.focus();
+      }
+      e.stopPropagation();
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+
+    _checkblur(ev) {
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+      var that = this;
+      if(ev.relatedTarget && (ev.relatedTarget.localName === 'input' || ev.relatedTarget.localName === 'textarea') && !(ev.relatedTarget.type == 'submit')) {
+        this.$.editMode.focus();
+      }  else {
+        if(this.mode === 'read') {
+          this.readMode = true;
+          this.editMode = false;
+        }
+       if (this.oldValue !== this.editValue) {
+          if (ev.target.type == 'number' && this.editValue != '') {
+            var key = ev.target.value;
+
+            if (/^-?\d*\.?\d+$/.test(key)) {
+              // document.formname.txt.focus();
+              // return (false);
+              if (!isNaN(parseFloat(key)) && isFinite(key)) {
+                if (parseFloat(ev.target.value) > 100000000000000) {
+                  alert(ev.target.value + " is too large. Maximum allowed limit is 100000000000000");
+                  ev.target.value = '';
+                  return;
+                  ev.preventDefault();
+                }
+              }
+            } else {
+              alert('only numbers are allowed');
+              ev.target.value = '';
+              return;
+              ev.preventDefault();
+            }
+
+          }
+          this.dispatchEvent(new CustomEvent('submitvalue', { detail: { oldValue: this.oldValue, type: this.type, value: this.editValue }, bubbles: true, composed: true }));
+          this.dispatchEvent(new CustomEvent('adjustrowheight', { bubbles: true, composed: true }));
+        } else if (this.oldValue === '' && this.editValue === '') {
+          ev.target.value = '';
+        }
+      }
+    }
+
+  }
+  customElements.define(CustomText.is, CustomText);
+</script>
+
+</dom-module>
